@@ -50,7 +50,7 @@ func (c *Reconciler) setLabelForGivenConfigurations(
 ) error {
 
 	logger := logging.FromContext(ctx)
-	configClient := c.ServingClientSet.ServingV1alpha1().Configurations(route.Namespace)
+	configClient := c.ServingClientSet.ServingV1beta1().Configurations(route.Namespace)
 
 	names := []string{}
 
@@ -118,7 +118,7 @@ func (c *Reconciler) deleteLabelForOutsideOfGivenConfigurations(
 
 			delete(config.Labels, serving.RouteLabelKey)
 
-			configClient := c.ServingClientSet.ServingV1alpha1().Configurations(config.Namespace)
+			configClient := c.ServingClientSet.ServingV1beta1().Configurations(config.Namespace)
 			if err := setRouteLabelForConfiguration(configClient, config.Name, nil); err != nil {
 				logger.Errorf("Failed to remove route label to configuration %q: %s", config.Name, err)
 				return err

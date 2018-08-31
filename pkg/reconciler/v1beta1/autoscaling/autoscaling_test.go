@@ -96,13 +96,13 @@ func TestControllerSynchronizesCreatesAndDeletes(t *testing.T) {
 	)
 
 	rev := newTestRevision(testNamespace, testRevision)
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Create(rev)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
 	ep := addEndpoint(makeEndpoints(rev))
 	kubeClient.CoreV1().Endpoints(testNamespace).Create(ep)
 	kubeInformer.Core().V1().Endpoints().Informer().GetIndexer().Add(ep)
 	kpa := revisionresources.MakeKPA(rev)
-	servingClient.AutoscalingV1alpha1().PodAutoscalers(testNamespace).Create(kpa)
+	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
 	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	reconcileDone := make(chan struct{})
 	go func() {
@@ -127,7 +127,7 @@ func TestControllerSynchronizesCreatesAndDeletes(t *testing.T) {
 		t.Fatalf("Create called %d times instead of once", count)
 	}
 
-	newKPA, err := servingClient.AutoscalingV1alpha1().PodAutoscalers(kpa.Namespace).Get(
+	newKPA, err := servingClient.AutoscalingV1beta1().PodAutoscalers(kpa.Namespace).Get(
 		kpa.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Errorf("Get() = %v", err)
@@ -136,9 +136,9 @@ func TestControllerSynchronizesCreatesAndDeletes(t *testing.T) {
 		t.Errorf("GetCondition(Ready) = %v, wanted True", cond)
 	}
 
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Delete(testRevision, nil)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Delete(testRevision, nil)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Delete(rev)
-	servingClient.AutoscalingV1alpha1().PodAutoscalers(testNamespace).Delete(testRevision, nil)
+	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Delete(testRevision, nil)
 	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Delete(kpa)
 	err = ctl.Reconciler.Reconcile(context.TODO(), testNamespace+"/"+testRevision)
 	if err != nil {
@@ -183,14 +183,14 @@ func TestNoEndpointsActive(t *testing.T) {
 	)
 
 	rev := newTestRevision(testNamespace, testRevision)
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Create(rev)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
 	// These do not exist yet.
 	// ep := addEndpoint(makeEndpoints(rev))
 	// kubeClient.CoreV1().Endpoints(testNamespace).Create(ep)
 	// kubeInformer.Core().V1().Endpoints().Informer().GetIndexer().Add(ep)
 	kpa := revisionresources.MakeKPA(rev)
-	servingClient.AutoscalingV1alpha1().PodAutoscalers(testNamespace).Create(kpa)
+	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
 	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	reconcileDone := make(chan struct{})
 	go func() {
@@ -205,7 +205,7 @@ func TestNoEndpointsActive(t *testing.T) {
 	_ = <-createdCh
 	_ = <-reconcileDone
 
-	newKPA, err := servingClient.AutoscalingV1alpha1().PodAutoscalers(kpa.Namespace).Get(
+	newKPA, err := servingClient.AutoscalingV1beta1().PodAutoscalers(kpa.Namespace).Get(
 		kpa.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Errorf("Get() = %v", err)
@@ -244,14 +244,14 @@ func TestEmptyEndpointsActive(t *testing.T) {
 	)
 
 	rev := newTestRevision(testNamespace, testRevision)
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Create(rev)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
 	// This is empty still.
 	ep := makeEndpoints(rev)
 	kubeClient.CoreV1().Endpoints(testNamespace).Create(ep)
 	kubeInformer.Core().V1().Endpoints().Informer().GetIndexer().Add(ep)
 	kpa := revisionresources.MakeKPA(rev)
-	servingClient.AutoscalingV1alpha1().PodAutoscalers(testNamespace).Create(kpa)
+	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
 	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	reconcileDone := make(chan struct{})
 	go func() {
@@ -266,7 +266,7 @@ func TestEmptyEndpointsActive(t *testing.T) {
 	_ = <-createdCh
 	_ = <-reconcileDone
 
-	newKPA, err := servingClient.AutoscalingV1alpha1().PodAutoscalers(kpa.Namespace).Get(
+	newKPA, err := servingClient.AutoscalingV1beta1().PodAutoscalers(kpa.Namespace).Get(
 		kpa.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Errorf("Get() = %v", err)
@@ -306,14 +306,14 @@ func TestNoEndpointsReserve(t *testing.T) {
 
 	rev := newTestRevision(testNamespace, testRevision)
 	rev.Spec.ServingState = "Reserve"
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Create(rev)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
 	// These do not exist yet.
 	// ep := addEndpoint(makeEndpoints(rev))
 	// kubeClient.CoreV1().Endpoints(testNamespace).Create(ep)
 	// kubeInformer.Core().V1().Endpoints().Informer().GetIndexer().Add(ep)
 	kpa := revisionresources.MakeKPA(rev)
-	servingClient.AutoscalingV1alpha1().PodAutoscalers(testNamespace).Create(kpa)
+	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
 	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	reconcileDone := make(chan struct{})
 	go func() {
@@ -328,7 +328,7 @@ func TestNoEndpointsReserve(t *testing.T) {
 	_ = <-createdCh
 	_ = <-reconcileDone
 
-	newKPA, err := servingClient.AutoscalingV1alpha1().PodAutoscalers(kpa.Namespace).Get(
+	newKPA, err := servingClient.AutoscalingV1beta1().PodAutoscalers(kpa.Namespace).Get(
 		kpa.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Errorf("Get() = %v", err)
@@ -368,13 +368,13 @@ func TestReserveWithEndpoints(t *testing.T) {
 
 	rev := newTestRevision(testNamespace, testRevision)
 	rev.Spec.ServingState = "Reserve"
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Create(rev)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
 	ep := addEndpoint(makeEndpoints(rev))
 	kubeClient.CoreV1().Endpoints(testNamespace).Create(ep)
 	kubeInformer.Core().V1().Endpoints().Informer().GetIndexer().Add(ep)
 	kpa := revisionresources.MakeKPA(rev)
-	servingClient.AutoscalingV1alpha1().PodAutoscalers(testNamespace).Create(kpa)
+	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
 	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	reconcileDone := make(chan struct{})
 	go func() {
@@ -389,7 +389,7 @@ func TestReserveWithEndpoints(t *testing.T) {
 	_ = <-createdCh
 	_ = <-reconcileDone
 
-	newKPA, err := servingClient.AutoscalingV1alpha1().PodAutoscalers(kpa.Namespace).Get(
+	newKPA, err := servingClient.AutoscalingV1beta1().PodAutoscalers(kpa.Namespace).Get(
 		kpa.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Errorf("Get() = %v", err)
@@ -428,7 +428,7 @@ func TestControllerCreateError(t *testing.T) {
 	)
 
 	kpa := revisionresources.MakeKPA(newTestRevision(testNamespace, testRevision))
-	servingClient.AutoscalingV1alpha1().PodAutoscalers(testNamespace).Create(kpa)
+	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
 	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 
 	got := ctl.Reconciler.Reconcile(context.TODO(), key)
@@ -466,7 +466,7 @@ func TestControllerUpdateError(t *testing.T) {
 	)
 
 	kpa := revisionresources.MakeKPA(newTestRevision(testNamespace, testRevision))
-	servingClient.AutoscalingV1alpha1().PodAutoscalers(testNamespace).Create(kpa)
+	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
 	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 
 	got := ctl.Reconciler.Reconcile(context.TODO(), key)
@@ -503,7 +503,7 @@ func TestControllerGetError(t *testing.T) {
 	)
 
 	kpa := revisionresources.MakeKPA(newTestRevision(testNamespace, testRevision))
-	servingClient.AutoscalingV1alpha1().PodAutoscalers(testNamespace).Create(kpa)
+	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
 	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 
 	got := ctl.Reconciler.Reconcile(context.TODO(), key)

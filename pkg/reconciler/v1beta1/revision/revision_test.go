@@ -228,7 +228,7 @@ func createRevision(t *testing.T,
 	servingClient *fakeclientset.Clientset, servingInformer informers.SharedInformerFactory,
 	controller *ctrl.Impl, rev *v1beta1.Revision) *v1beta1.Revision {
 	t.Helper()
-	servingClient.ServingV1alpha1().Revisions(rev.Namespace).Create(rev)
+	servingClient.ServingV1beta1().Revisions(rev.Namespace).Create(rev)
 	// Since Reconcile looks in the lister, we need to add it to the informer
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
 
@@ -243,7 +243,7 @@ func updateRevision(t *testing.T,
 	servingClient *fakeclientset.Clientset, servingInformer informers.SharedInformerFactory,
 	controller *ctrl.Impl, rev *v1beta1.Revision) {
 	t.Helper()
-	servingClient.ServingV1alpha1().Revisions(rev.Namespace).Update(rev)
+	servingClient.ServingV1beta1().Revisions(rev.Namespace).Update(rev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Update(rev)
 
 	if err := controller.Reconciler.Reconcile(context.TODO(), KeyOrDie(rev)); err == nil {
@@ -267,7 +267,7 @@ func addResourcesToInformers(t *testing.T,
 	rev *v1beta1.Revision) (*v1beta1.Revision, *appsv1.Deployment, *corev1.Service) {
 	t.Helper()
 
-	rev, err := servingClient.ServingV1alpha1().Revisions(rev.Namespace).Get(rev.Name, metav1.GetOptions{})
+	rev, err := servingClient.ServingV1beta1().Revisions(rev.Namespace).Get(rev.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Errorf("Revisions.Get(%v) = %v", rev.Name, err)
 	}
@@ -279,7 +279,7 @@ func addResourcesToInformers(t *testing.T,
 	ns := rev.Namespace
 
 	kpaName := resourcenames.KPA(rev)
-	kpa, err := servingClient.AutoscalingV1alpha1().PodAutoscalers(rev.Namespace).Get(kpaName, metav1.GetOptions{})
+	kpa, err := servingClient.AutoscalingV1beta1().PodAutoscalers(rev.Namespace).Get(kpaName, metav1.GetOptions{})
 	if apierrs.IsNotFound(err) && (haveBuild || inActive) {
 		// If we're doing a Build this won't exist yet.
 	} else if err != nil {
@@ -350,7 +350,7 @@ func TestResolutionFailed(t *testing.T) {
 
 	createRevision(t, kubeClient, kubeInformer, servingClient, servingInformer, controller, rev)
 
-	rev, err := servingClient.ServingV1alpha1().Revisions(testNamespace).Get(rev.Name, metav1.GetOptions{})
+	rev, err := servingClient.ServingV1beta1().Revisions(testNamespace).Get(rev.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Couldn't get revision: %v", err)
 	}
@@ -392,7 +392,7 @@ func TestCreateRevWithVPA(t *testing.T) {
 		},
 	}, getTestControllerConfigMap(),
 	)
-	revClient := servingClient.ServingV1alpha1().Revisions(testNamespace)
+	revClient := servingClient.ServingV1beta1().Revisions(testNamespace)
 	rev := getTestRevision()
 
 	if !controller.Reconciler.(*Reconciler).getAutoscalerConfig().EnableVPA {
@@ -432,7 +432,7 @@ func TestUpdateRevWithWithUpdatedLoggingURL(t *testing.T) {
 		},
 	}, getTestControllerConfigMap(),
 	)
-	revClient := servingClient.ServingV1alpha1().Revisions(testNamespace)
+	revClient := servingClient.ServingV1beta1().Revisions(testNamespace)
 
 	rev := getTestRevision()
 	createRevision(t, kubeClient, kubeInformer, servingClient, servingInformer, controller, rev)

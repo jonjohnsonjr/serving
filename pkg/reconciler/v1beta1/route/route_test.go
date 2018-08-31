@@ -247,7 +247,7 @@ func addResourcesToInformers(
 
 	ns := route.Namespace
 
-	route, err := servingClient.ServingV1alpha1().Routes(ns).Get(route.Name, metav1.GetOptions{})
+	route, err := servingClient.ServingV1beta1().Routes(ns).Get(route.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Errorf("Route.Get(%v) = %v", route.Name, err)
 	}
@@ -285,7 +285,7 @@ func TestCreateRouteForOneReserveRevision(t *testing.T) {
 			Type:   v1beta1.RevisionConditionActive,
 			Status: corev1.ConditionFalse,
 		})
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Create(rev)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
 
 	// A route targeting the revision
@@ -296,7 +296,7 @@ func TestCreateRouteForOneReserveRevision(t *testing.T) {
 			Percent:           100,
 		}},
 	)
-	servingClient.ServingV1alpha1().Routes(testNamespace).Create(route)
+	servingClient.ServingV1beta1().Routes(testNamespace).Create(route)
 	// Since Reconcile looks in the lister, we need to add it to the informer
 	servingInformer.Serving().V1alpha1().Routes().Informer().GetIndexer().Add(route)
 
@@ -377,7 +377,7 @@ func TestCreateRouteWithMultipleTargets(t *testing.T) {
 	_, sharedClient, servingClient, controller, _, _, servingInformer, _ := newTestReconciler(t)
 	// A standalone revision
 	rev := getTestRevision("test-rev")
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Create(rev)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
 
 	// A configuration and associated revision. Normally the revision would be
@@ -386,10 +386,10 @@ func TestCreateRouteWithMultipleTargets(t *testing.T) {
 	cfgrev := getTestRevisionForConfig(config)
 	config.Status.SetLatestCreatedRevisionName(cfgrev.Name)
 	config.Status.SetLatestReadyRevisionName(cfgrev.Name)
-	servingClient.ServingV1alpha1().Configurations(testNamespace).Create(config)
+	servingClient.ServingV1beta1().Configurations(testNamespace).Create(config)
 	// Since Reconcile looks in the lister, we need to add it to the informer
 	servingInformer.Serving().V1alpha1().Configurations().Informer().GetIndexer().Add(config)
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Create(cfgrev)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Create(cfgrev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(cfgrev)
 
 	// A route targeting both the config and standalone revision
@@ -402,7 +402,7 @@ func TestCreateRouteWithMultipleTargets(t *testing.T) {
 			Percent:      10,
 		}},
 	)
-	servingClient.ServingV1alpha1().Routes(testNamespace).Create(route)
+	servingClient.ServingV1beta1().Routes(testNamespace).Create(route)
 	// Since Reconcile looks in the lister, we need to add it to the informer
 	servingInformer.Serving().V1alpha1().Routes().Informer().GetIndexer().Add(route)
 
@@ -474,7 +474,7 @@ func TestCreateRouteWithOneTargetReserve(t *testing.T) {
 			Type:   v1beta1.RevisionConditionActive,
 			Status: corev1.ConditionFalse,
 		})
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Create(rev)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
 
 	// A configuration and associated revision. Normally the revision would be
@@ -483,10 +483,10 @@ func TestCreateRouteWithOneTargetReserve(t *testing.T) {
 	cfgrev := getTestRevisionForConfig(config)
 	config.Status.SetLatestCreatedRevisionName(cfgrev.Name)
 	config.Status.SetLatestReadyRevisionName(cfgrev.Name)
-	servingClient.ServingV1alpha1().Configurations(testNamespace).Create(config)
+	servingClient.ServingV1beta1().Configurations(testNamespace).Create(config)
 	// Since Reconcile looks in the lister, we need to add it to the informer
 	servingInformer.Serving().V1alpha1().Configurations().Informer().GetIndexer().Add(config)
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Create(cfgrev)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Create(cfgrev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(cfgrev)
 
 	// A route targeting both the config and standalone revision
@@ -500,7 +500,7 @@ func TestCreateRouteWithOneTargetReserve(t *testing.T) {
 			Percent:           10,
 		}},
 	)
-	servingClient.ServingV1alpha1().Routes(testNamespace).Create(route)
+	servingClient.ServingV1beta1().Routes(testNamespace).Create(route)
 	// Since Reconcile looks in the lister, we need to add it to the informer
 	servingInformer.Serving().V1alpha1().Routes().Informer().GetIndexer().Add(route)
 
@@ -567,7 +567,7 @@ func TestCreateRouteWithDuplicateTargets(t *testing.T) {
 
 	// A standalone revision
 	rev := getTestRevision("test-rev")
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Create(rev)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
 
 	// A configuration and associated revision. Normally the revision would be
@@ -576,10 +576,10 @@ func TestCreateRouteWithDuplicateTargets(t *testing.T) {
 	cfgrev := getTestRevisionForConfig(config)
 	config.Status.SetLatestCreatedRevisionName(cfgrev.Name)
 	config.Status.SetLatestReadyRevisionName(cfgrev.Name)
-	servingClient.ServingV1alpha1().Configurations(testNamespace).Create(config)
+	servingClient.ServingV1beta1().Configurations(testNamespace).Create(config)
 	// Since Reconcile looks in the lister, we need to add it to the informer
 	servingInformer.Serving().V1alpha1().Configurations().Informer().GetIndexer().Add(config)
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Create(cfgrev)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Create(cfgrev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(cfgrev)
 
 	// A route with duplicate targets. These will be deduped.
@@ -610,7 +610,7 @@ func TestCreateRouteWithDuplicateTargets(t *testing.T) {
 			Percent:      15,
 		}},
 	)
-	servingClient.ServingV1alpha1().Routes(testNamespace).Create(route)
+	servingClient.ServingV1beta1().Routes(testNamespace).Create(route)
 	// Since Reconcile looks in the lister, we need to add it to the informer
 	servingInformer.Serving().V1alpha1().Routes().Informer().GetIndexer().Add(route)
 
@@ -706,7 +706,7 @@ func TestCreateRouteWithNamedTargets(t *testing.T) {
 	_, sharedClient, servingClient, controller, _, _, servingInformer, _ := newTestReconciler(t)
 	// A standalone revision
 	rev := getTestRevision("test-rev")
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Create(rev)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
 
 	// A configuration and associated revision. Normally the revision would be
@@ -715,10 +715,10 @@ func TestCreateRouteWithNamedTargets(t *testing.T) {
 	cfgrev := getTestRevisionForConfig(config)
 	config.Status.SetLatestCreatedRevisionName(cfgrev.Name)
 	config.Status.SetLatestReadyRevisionName(cfgrev.Name)
-	servingClient.ServingV1alpha1().Configurations(testNamespace).Create(config)
+	servingClient.ServingV1beta1().Configurations(testNamespace).Create(config)
 	// Since Reconcile looks in the lister, we need to add it to the informer
 	servingInformer.Serving().V1alpha1().Configurations().Informer().GetIndexer().Add(config)
-	servingClient.ServingV1alpha1().Revisions(testNamespace).Create(cfgrev)
+	servingClient.ServingV1beta1().Revisions(testNamespace).Create(cfgrev)
 	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(cfgrev)
 
 	// A route targeting both the config and standalone revision with named
@@ -735,7 +735,7 @@ func TestCreateRouteWithNamedTargets(t *testing.T) {
 		}},
 	)
 
-	servingClient.ServingV1alpha1().Routes(testNamespace).Create(route)
+	servingClient.ServingV1beta1().Routes(testNamespace).Create(route)
 	// Since Reconcile looks in the lister, we need to add it to the informer
 	servingInformer.Serving().V1alpha1().Routes().Informer().GetIndexer().Add(route)
 
@@ -828,7 +828,7 @@ func TestCreateRouteWithNamedTargets(t *testing.T) {
 
 func TestEnqueueReferringRoute(t *testing.T) {
 	_, _, servingClient, controller, reconciler, _, _, servingInformer, _ := newTestSetup(t)
-	routeClient := servingClient.ServingV1alpha1().Routes(testNamespace)
+	routeClient := servingClient.ServingV1beta1().Routes(testNamespace)
 
 	config := getTestConfiguration()
 	rev := getTestRevisionForConfig(config)
@@ -913,7 +913,7 @@ func TestEnqueueReferringRouteNotEnqueueIfNotGivenAConfig(t *testing.T) {
 func TestUpdateDomainConfigMap(t *testing.T) {
 	kubeClient, sharedClient, servingClient, controller, kubeInformer, sharedInformer, servingInformer, _ := newTestReconciler(t)
 	route := getTestRouteWithTrafficTargets([]v1beta1.TrafficTarget{})
-	routeClient := servingClient.ServingV1alpha1().Routes(route.Namespace)
+	routeClient := servingClient.ServingV1beta1().Routes(route.Namespace)
 
 	// Create a route.
 	servingInformer.Serving().V1alpha1().Routes().Informer().GetIndexer().Add(route)

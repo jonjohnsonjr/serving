@@ -361,7 +361,7 @@ func (c *Reconciler) updateStatus(rev *v1beta1.Revision) (*v1beta1.Revision, err
 		newRev.Status = rev.Status
 
 		// TODO: for CRD there's no updatestatus, so use normal update
-		return c.ServingClientSet.ServingV1alpha1().Revisions(rev.Namespace).Update(newRev)
+		return c.ServingClientSet.ServingV1beta1().Revisions(rev.Namespace).Update(newRev)
 		//	return prClient.UpdateStatus(newRev)
 	}
 	return rev, nil

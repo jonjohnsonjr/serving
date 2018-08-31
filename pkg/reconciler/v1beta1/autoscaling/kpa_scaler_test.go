@@ -168,7 +168,7 @@ func TestKPAScaler(t *testing.T) {
 func newKPA(t *testing.T, servingClient clientset.Interface, revision *v1beta1.Revision) *kpa.PodAutoscaler {
 	kpa := revisionresources.MakeKPA(revision)
 	kpa.Status.InitializeConditions()
-	_, err := servingClient.AutoscalingV1alpha1().PodAutoscalers(testNamespace).Create(kpa)
+	_, err := servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
 	if err != nil {
 		t.Fatal("Failed to create KPA.", err)
 	}
@@ -187,7 +187,7 @@ func newRevision(t *testing.T, servingClient clientset.Interface, servingState v
 			ConcurrencyModel: "Multi",
 		},
 	}
-	rev, err := servingClient.ServingV1alpha1().Revisions(testNamespace).Create(rev)
+	rev, err := servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
 	if err != nil {
 		t.Fatal("Failed to create revision.", err)
 	}
@@ -232,7 +232,7 @@ func newDeployment(t *testing.T, scaleClient *scalefake.FakeScaleClient, revisio
 func checkServingState(t *testing.T, servingClient clientset.Interface, servingState v1beta1.RevisionServingStateType) {
 	t.Helper()
 
-	updatedRev, err := servingClient.ServingV1alpha1().Revisions(testNamespace).Get(testRevision, metav1.GetOptions{})
+	updatedRev, err := servingClient.ServingV1beta1().Revisions(testNamespace).Get(testRevision, metav1.GetOptions{})
 	if err != nil {
 		t.Fatal("Failed to get revision.", err)
 	}

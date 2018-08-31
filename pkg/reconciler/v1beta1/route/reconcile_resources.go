@@ -118,7 +118,7 @@ func (c *Reconciler) updateStatus(ctx context.Context, route *v1beta1.Route) (*v
 	}
 	existing.Status = route.Status
 	// TODO: for CRD there's no updatestatus, so use normal update.
-	updated, err := c.ServingClientSet.ServingV1alpha1().Routes(route.Namespace).Update(existing)
+	updated, err := c.ServingClientSet.ServingV1beta1().Routes(route.Namespace).Update(existing)
 	if err != nil {
 		return nil, err
 	}

@@ -196,7 +196,7 @@ func (c *Reconciler) updateStatus(service *v1beta1.Service) (*v1beta1.Service, e
 	// Check if there is anything to update.
 	if !reflect.DeepEqual(existing.Status, service.Status) {
 		existing.Status = service.Status
-		serviceClient := c.ServingClientSet.ServingV1alpha1().Services(service.Namespace)
+		serviceClient := c.ServingClientSet.ServingV1beta1().Services(service.Namespace)
 		// TODO: for CRD there's no updatestatus, so use normal update.
 		return serviceClient.Update(existing)
 	}
@@ -208,7 +208,7 @@ func (c *Reconciler) createConfiguration(service *v1beta1.Service) (*v1beta1.Con
 	if err != nil {
 		return nil, err
 	}
-	return c.ServingClientSet.ServingV1alpha1().Configurations(service.Namespace).Create(cfg)
+	return c.ServingClientSet.ServingV1beta1().Configurations(service.Namespace).Create(cfg)
 }
 
 func (c *Reconciler) reconcileConfiguration(ctx context.Context, service *v1beta1.Service, config *v1beta1.Configuration) (*v1beta1.Configuration, error) {
@@ -230,11 +230,11 @@ func (c *Reconciler) reconcileConfiguration(ctx context.Context, service *v1beta
 
 	// Preserve the rest of the object (e.g. ObjectMeta)
 	config.Spec = desiredConfig.Spec
-	return c.ServingClientSet.ServingV1alpha1().Configurations(service.Namespace).Update(config)
+	return c.ServingClientSet.ServingV1beta1().Configurations(service.Namespace).Update(config)
 }
 
 func (c *Reconciler) createRoute(service *v1beta1.Service) (*v1beta1.Route, error) {
-	return c.ServingClientSet.ServingV1alpha1().Routes(service.Namespace).Create(resources.MakeRoute(service))
+	return c.ServingClientSet.ServingV1beta1().Routes(service.Namespace).Create(resources.MakeRoute(service))
 }
 
 func (c *Reconciler) reconcileRoute(ctx context.Context, service *v1beta1.Service, route *v1beta1.Route) (*v1beta1.Route, error) {
@@ -252,5 +252,5 @@ func (c *Reconciler) reconcileRoute(ctx context.Context, service *v1beta1.Servic
 
 	// Preserve the rest of the object (e.g. ObjectMeta)
 	route.Spec = desiredRoute.Spec
-	return c.ServingClientSet.ServingV1alpha1().Routes(service.Namespace).Update(route)
+	return c.ServingClientSet.ServingV1beta1().Routes(service.Namespace).Update(route)
 }

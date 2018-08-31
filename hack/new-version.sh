@@ -45,5 +45,12 @@ done
 
 git commit -m "Fork $OLD_VErSION to $NEW_VERSION"
 
+# find ./ -type f -exec sed -i -e 's/ServingV1alpha1/ServingV1beta1/g' {} \;
+# find ./ -type f -exec sed -i -e 's/AutoscalingV1alpha1/AutoscalingV1beta1/g' {} \;
+# sed -i "s/${OLD_VERSION}/${NEW_VERSION}/g" pkg/apis/autoscaling/${NEW_VERSION}/kpa_validation_test.go
+
+
 # TODO: Things that are hard.
 # * kpa_validation_test has error messages hard-coded with versions embedded.
+# * pkg/apis/serving/${NEW_VERSION}/register.go s/old/new/
+# * pkg/apis/autoscaling/${NEW_VERSION}/register.go s/old/new/
