@@ -21,7 +21,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	build_v1alpha1 "github.com/knative/build/pkg/apis/build/v1alpha1"
+	v1alpha1 "github.com/knative/build/pkg/apis/build/v1alpha1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -113,7 +113,7 @@ func (in *ConfigurationSpec) DeepCopyInto(out *ConfigurationSpec) {
 		if *in == nil {
 			*out = nil
 		} else {
-			*out = new(build_v1alpha1.BuildSpec)
+			*out = new(v1alpha1.BuildSpec)
 			(*in).DeepCopyInto(*out)
 		}
 	}

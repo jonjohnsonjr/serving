@@ -19,8 +19,12 @@ import (
 	clientset "github.com/knative/serving/pkg/client/clientset/versioned"
 	autoscalingv1alpha1 "github.com/knative/serving/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1"
 	fakeautoscalingv1alpha1 "github.com/knative/serving/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1/fake"
+	autoscalingv1beta1 "github.com/knative/serving/pkg/client/clientset/versioned/typed/autoscaling/v1beta1"
+	fakeautoscalingv1beta1 "github.com/knative/serving/pkg/client/clientset/versioned/typed/autoscaling/v1beta1/fake"
 	servingv1alpha1 "github.com/knative/serving/pkg/client/clientset/versioned/typed/serving/v1alpha1"
 	fakeservingv1alpha1 "github.com/knative/serving/pkg/client/clientset/versioned/typed/serving/v1alpha1/fake"
+	servingv1beta1 "github.com/knative/serving/pkg/client/clientset/versioned/typed/serving/v1beta1"
+	fakeservingv1beta1 "github.com/knative/serving/pkg/client/clientset/versioned/typed/serving/v1beta1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -75,9 +79,14 @@ func (c *Clientset) AutoscalingV1alpha1() autoscalingv1alpha1.AutoscalingV1alpha
 	return &fakeautoscalingv1alpha1.FakeAutoscalingV1alpha1{Fake: &c.Fake}
 }
 
-// Autoscaling retrieves the AutoscalingV1alpha1Client
-func (c *Clientset) Autoscaling() autoscalingv1alpha1.AutoscalingV1alpha1Interface {
-	return &fakeautoscalingv1alpha1.FakeAutoscalingV1alpha1{Fake: &c.Fake}
+// AutoscalingV1beta1 retrieves the AutoscalingV1beta1Client
+func (c *Clientset) AutoscalingV1beta1() autoscalingv1beta1.AutoscalingV1beta1Interface {
+	return &fakeautoscalingv1beta1.FakeAutoscalingV1beta1{Fake: &c.Fake}
+}
+
+// Autoscaling retrieves the AutoscalingV1beta1Client
+func (c *Clientset) Autoscaling() autoscalingv1beta1.AutoscalingV1beta1Interface {
+	return &fakeautoscalingv1beta1.FakeAutoscalingV1beta1{Fake: &c.Fake}
 }
 
 // ServingV1alpha1 retrieves the ServingV1alpha1Client
@@ -85,7 +94,12 @@ func (c *Clientset) ServingV1alpha1() servingv1alpha1.ServingV1alpha1Interface {
 	return &fakeservingv1alpha1.FakeServingV1alpha1{Fake: &c.Fake}
 }
 
-// Serving retrieves the ServingV1alpha1Client
-func (c *Clientset) Serving() servingv1alpha1.ServingV1alpha1Interface {
-	return &fakeservingv1alpha1.FakeServingV1alpha1{Fake: &c.Fake}
+// ServingV1beta1 retrieves the ServingV1beta1Client
+func (c *Clientset) ServingV1beta1() servingv1beta1.ServingV1beta1Interface {
+	return &fakeservingv1beta1.FakeServingV1beta1{Fake: &c.Fake}
+}
+
+// Serving retrieves the ServingV1beta1Client
+func (c *Clientset) Serving() servingv1beta1.ServingV1beta1Interface {
+	return &fakeservingv1beta1.FakeServingV1beta1{Fake: &c.Fake}
 }

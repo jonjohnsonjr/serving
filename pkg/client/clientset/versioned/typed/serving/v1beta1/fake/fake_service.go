@@ -16,7 +16,7 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -27,29 +27,29 @@ import (
 
 // FakeServices implements ServiceInterface
 type FakeServices struct {
-	Fake *FakeServingV1alpha1
+	Fake *FakeServingV1beta1
 	ns   string
 }
 
-var servicesResource = schema.GroupVersionResource{Group: "serving.knative.dev", Version: "v1alpha1", Resource: "services"}
+var servicesResource = schema.GroupVersionResource{Group: "serving.knative.dev", Version: "v1beta1", Resource: "services"}
 
-var servicesKind = schema.GroupVersionKind{Group: "serving.knative.dev", Version: "v1alpha1", Kind: "Service"}
+var servicesKind = schema.GroupVersionKind{Group: "serving.knative.dev", Version: "v1beta1", Kind: "Service"}
 
 // Get takes name of the service, and returns the corresponding service object, and an error if there is any.
-func (c *FakeServices) Get(name string, options v1.GetOptions) (result *v1alpha1.Service, err error) {
+func (c *FakeServices) Get(name string, options v1.GetOptions) (result *v1beta1.Service, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(servicesResource, c.ns, name), &v1alpha1.Service{})
+		Invokes(testing.NewGetAction(servicesResource, c.ns, name), &v1beta1.Service{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Service), err
+	return obj.(*v1beta1.Service), err
 }
 
 // List takes label and field selectors, and returns the list of Services that match those selectors.
-func (c *FakeServices) List(opts v1.ListOptions) (result *v1alpha1.ServiceList, err error) {
+func (c *FakeServices) List(opts v1.ListOptions) (result *v1beta1.ServiceList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(servicesResource, servicesKind, c.ns, opts), &v1alpha1.ServiceList{})
+		Invokes(testing.NewListAction(servicesResource, servicesKind, c.ns, opts), &v1beta1.ServiceList{})
 
 	if obj == nil {
 		return nil, err
@@ -59,8 +59,8 @@ func (c *FakeServices) List(opts v1.ListOptions) (result *v1alpha1.ServiceList, 
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.ServiceList{ListMeta: obj.(*v1alpha1.ServiceList).ListMeta}
-	for _, item := range obj.(*v1alpha1.ServiceList).Items {
+	list := &v1beta1.ServiceList{ListMeta: obj.(*v1beta1.ServiceList).ListMeta}
+	for _, item := range obj.(*v1beta1.ServiceList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -76,43 +76,43 @@ func (c *FakeServices) Watch(opts v1.ListOptions) (watch.Interface, error) {
 }
 
 // Create takes the representation of a service and creates it.  Returns the server's representation of the service, and an error, if there is any.
-func (c *FakeServices) Create(service *v1alpha1.Service) (result *v1alpha1.Service, err error) {
+func (c *FakeServices) Create(service *v1beta1.Service) (result *v1beta1.Service, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(servicesResource, c.ns, service), &v1alpha1.Service{})
+		Invokes(testing.NewCreateAction(servicesResource, c.ns, service), &v1beta1.Service{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Service), err
+	return obj.(*v1beta1.Service), err
 }
 
 // Update takes the representation of a service and updates it. Returns the server's representation of the service, and an error, if there is any.
-func (c *FakeServices) Update(service *v1alpha1.Service) (result *v1alpha1.Service, err error) {
+func (c *FakeServices) Update(service *v1beta1.Service) (result *v1beta1.Service, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(servicesResource, c.ns, service), &v1alpha1.Service{})
+		Invokes(testing.NewUpdateAction(servicesResource, c.ns, service), &v1beta1.Service{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Service), err
+	return obj.(*v1beta1.Service), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeServices) UpdateStatus(service *v1alpha1.Service) (*v1alpha1.Service, error) {
+func (c *FakeServices) UpdateStatus(service *v1beta1.Service) (*v1beta1.Service, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(servicesResource, "status", c.ns, service), &v1alpha1.Service{})
+		Invokes(testing.NewUpdateSubresourceAction(servicesResource, "status", c.ns, service), &v1beta1.Service{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Service), err
+	return obj.(*v1beta1.Service), err
 }
 
 // Delete takes name of the service and deletes it. Returns an error if one occurs.
 func (c *FakeServices) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(servicesResource, c.ns, name), &v1alpha1.Service{})
+		Invokes(testing.NewDeleteAction(servicesResource, c.ns, name), &v1beta1.Service{})
 
 	return err
 }
@@ -121,17 +121,17 @@ func (c *FakeServices) Delete(name string, options *v1.DeleteOptions) error {
 func (c *FakeServices) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(servicesResource, c.ns, listOptions)
 
-	_, err := c.Fake.Invokes(action, &v1alpha1.ServiceList{})
+	_, err := c.Fake.Invokes(action, &v1beta1.ServiceList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched service.
-func (c *FakeServices) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Service, err error) {
+func (c *FakeServices) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.Service, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(servicesResource, c.ns, name, data, subresources...), &v1alpha1.Service{})
+		Invokes(testing.NewPatchSubresourceAction(servicesResource, c.ns, name, data, subresources...), &v1beta1.Service{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Service), err
+	return obj.(*v1beta1.Service), err
 }

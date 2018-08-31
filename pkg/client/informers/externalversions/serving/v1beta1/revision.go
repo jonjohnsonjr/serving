@@ -18,10 +18,10 @@ package v1beta1
 import (
 	time "time"
 
-	serving_v1alpha1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	serving_v1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	versioned "github.com/knative/serving/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/knative/serving/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/knative/serving/pkg/client/listers/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/client/listers/serving/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -32,7 +32,7 @@ import (
 // Revisions.
 type RevisionInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.RevisionLister
+	Lister() v1beta1.RevisionLister
 }
 
 type revisionInformer struct {
@@ -58,16 +58,16 @@ func NewFilteredRevisionInformer(client versioned.Interface, namespace string, r
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ServingV1alpha1().Revisions(namespace).List(options)
+				return client.ServingV1beta1().Revisions(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ServingV1alpha1().Revisions(namespace).Watch(options)
+				return client.ServingV1beta1().Revisions(namespace).Watch(options)
 			},
 		},
-		&serving_v1alpha1.Revision{},
+		&serving_v1beta1.Revision{},
 		resyncPeriod,
 		indexers,
 	)
@@ -78,9 +78,9 @@ func (f *revisionInformer) defaultInformer(client versioned.Interface, resyncPer
 }
 
 func (f *revisionInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&serving_v1alpha1.Revision{}, f.defaultInformer)
+	return f.factory.InformerFor(&serving_v1beta1.Revision{}, f.defaultInformer)
 }
 
-func (f *revisionInformer) Lister() v1alpha1.RevisionLister {
-	return v1alpha1.NewRevisionLister(f.Informer().GetIndexer())
+func (f *revisionInformer) Lister() v1beta1.RevisionLister {
+	return v1beta1.NewRevisionLister(f.Informer().GetIndexer())
 }

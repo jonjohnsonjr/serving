@@ -16,7 +16,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1alpha1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	scheme "github.com/knative/serving/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -32,15 +32,15 @@ type RoutesGetter interface {
 
 // RouteInterface has methods to work with Route resources.
 type RouteInterface interface {
-	Create(*v1alpha1.Route) (*v1alpha1.Route, error)
-	Update(*v1alpha1.Route) (*v1alpha1.Route, error)
-	UpdateStatus(*v1alpha1.Route) (*v1alpha1.Route, error)
+	Create(*v1beta1.Route) (*v1beta1.Route, error)
+	Update(*v1beta1.Route) (*v1beta1.Route, error)
+	UpdateStatus(*v1beta1.Route) (*v1beta1.Route, error)
 	Delete(name string, options *v1.DeleteOptions) error
 	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha1.Route, error)
-	List(opts v1.ListOptions) (*v1alpha1.RouteList, error)
+	Get(name string, options v1.GetOptions) (*v1beta1.Route, error)
+	List(opts v1.ListOptions) (*v1beta1.RouteList, error)
 	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Route, err error)
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.Route, err error)
 	RouteExpansion
 }
 
@@ -51,7 +51,7 @@ type routes struct {
 }
 
 // newRoutes returns a Routes
-func newRoutes(c *ServingV1alpha1Client, namespace string) *routes {
+func newRoutes(c *ServingV1beta1Client, namespace string) *routes {
 	return &routes{
 		client: c.RESTClient(),
 		ns:     namespace,
@@ -59,8 +59,8 @@ func newRoutes(c *ServingV1alpha1Client, namespace string) *routes {
 }
 
 // Get takes name of the route, and returns the corresponding route object, and an error if there is any.
-func (c *routes) Get(name string, options v1.GetOptions) (result *v1alpha1.Route, err error) {
-	result = &v1alpha1.Route{}
+func (c *routes) Get(name string, options v1.GetOptions) (result *v1beta1.Route, err error) {
+	result = &v1beta1.Route{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("routes").
@@ -72,8 +72,8 @@ func (c *routes) Get(name string, options v1.GetOptions) (result *v1alpha1.Route
 }
 
 // List takes label and field selectors, and returns the list of Routes that match those selectors.
-func (c *routes) List(opts v1.ListOptions) (result *v1alpha1.RouteList, err error) {
-	result = &v1alpha1.RouteList{}
+func (c *routes) List(opts v1.ListOptions) (result *v1beta1.RouteList, err error) {
+	result = &v1beta1.RouteList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("routes").
@@ -94,8 +94,8 @@ func (c *routes) Watch(opts v1.ListOptions) (watch.Interface, error) {
 }
 
 // Create takes the representation of a route and creates it.  Returns the server's representation of the route, and an error, if there is any.
-func (c *routes) Create(route *v1alpha1.Route) (result *v1alpha1.Route, err error) {
-	result = &v1alpha1.Route{}
+func (c *routes) Create(route *v1beta1.Route) (result *v1beta1.Route, err error) {
+	result = &v1beta1.Route{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("routes").
@@ -106,8 +106,8 @@ func (c *routes) Create(route *v1alpha1.Route) (result *v1alpha1.Route, err erro
 }
 
 // Update takes the representation of a route and updates it. Returns the server's representation of the route, and an error, if there is any.
-func (c *routes) Update(route *v1alpha1.Route) (result *v1alpha1.Route, err error) {
-	result = &v1alpha1.Route{}
+func (c *routes) Update(route *v1beta1.Route) (result *v1beta1.Route, err error) {
+	result = &v1beta1.Route{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("routes").
@@ -121,8 +121,8 @@ func (c *routes) Update(route *v1alpha1.Route) (result *v1alpha1.Route, err erro
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 
-func (c *routes) UpdateStatus(route *v1alpha1.Route) (result *v1alpha1.Route, err error) {
-	result = &v1alpha1.Route{}
+func (c *routes) UpdateStatus(route *v1beta1.Route) (result *v1beta1.Route, err error) {
+	result = &v1beta1.Route{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("routes").
@@ -157,8 +157,8 @@ func (c *routes) DeleteCollection(options *v1.DeleteOptions, listOptions v1.List
 }
 
 // Patch applies the patch and returns the patched route.
-func (c *routes) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Route, err error) {
-	result = &v1alpha1.Route{}
+func (c *routes) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.Route, err error) {
+	result = &v1beta1.Route{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("routes").

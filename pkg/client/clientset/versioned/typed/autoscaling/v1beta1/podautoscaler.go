@@ -16,7 +16,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1alpha1 "github.com/knative/serving/pkg/apis/autoscaling/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/apis/autoscaling/v1beta1"
 	scheme "github.com/knative/serving/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -32,15 +32,15 @@ type PodAutoscalersGetter interface {
 
 // PodAutoscalerInterface has methods to work with PodAutoscaler resources.
 type PodAutoscalerInterface interface {
-	Create(*v1alpha1.PodAutoscaler) (*v1alpha1.PodAutoscaler, error)
-	Update(*v1alpha1.PodAutoscaler) (*v1alpha1.PodAutoscaler, error)
-	UpdateStatus(*v1alpha1.PodAutoscaler) (*v1alpha1.PodAutoscaler, error)
+	Create(*v1beta1.PodAutoscaler) (*v1beta1.PodAutoscaler, error)
+	Update(*v1beta1.PodAutoscaler) (*v1beta1.PodAutoscaler, error)
+	UpdateStatus(*v1beta1.PodAutoscaler) (*v1beta1.PodAutoscaler, error)
 	Delete(name string, options *v1.DeleteOptions) error
 	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha1.PodAutoscaler, error)
-	List(opts v1.ListOptions) (*v1alpha1.PodAutoscalerList, error)
+	Get(name string, options v1.GetOptions) (*v1beta1.PodAutoscaler, error)
+	List(opts v1.ListOptions) (*v1beta1.PodAutoscalerList, error)
 	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.PodAutoscaler, err error)
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.PodAutoscaler, err error)
 	PodAutoscalerExpansion
 }
 
@@ -51,7 +51,7 @@ type podAutoscalers struct {
 }
 
 // newPodAutoscalers returns a PodAutoscalers
-func newPodAutoscalers(c *AutoscalingV1alpha1Client, namespace string) *podAutoscalers {
+func newPodAutoscalers(c *AutoscalingV1beta1Client, namespace string) *podAutoscalers {
 	return &podAutoscalers{
 		client: c.RESTClient(),
 		ns:     namespace,
@@ -59,8 +59,8 @@ func newPodAutoscalers(c *AutoscalingV1alpha1Client, namespace string) *podAutos
 }
 
 // Get takes name of the podAutoscaler, and returns the corresponding podAutoscaler object, and an error if there is any.
-func (c *podAutoscalers) Get(name string, options v1.GetOptions) (result *v1alpha1.PodAutoscaler, err error) {
-	result = &v1alpha1.PodAutoscaler{}
+func (c *podAutoscalers) Get(name string, options v1.GetOptions) (result *v1beta1.PodAutoscaler, err error) {
+	result = &v1beta1.PodAutoscaler{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("podautoscalers").
@@ -72,8 +72,8 @@ func (c *podAutoscalers) Get(name string, options v1.GetOptions) (result *v1alph
 }
 
 // List takes label and field selectors, and returns the list of PodAutoscalers that match those selectors.
-func (c *podAutoscalers) List(opts v1.ListOptions) (result *v1alpha1.PodAutoscalerList, err error) {
-	result = &v1alpha1.PodAutoscalerList{}
+func (c *podAutoscalers) List(opts v1.ListOptions) (result *v1beta1.PodAutoscalerList, err error) {
+	result = &v1beta1.PodAutoscalerList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("podautoscalers").
@@ -94,8 +94,8 @@ func (c *podAutoscalers) Watch(opts v1.ListOptions) (watch.Interface, error) {
 }
 
 // Create takes the representation of a podAutoscaler and creates it.  Returns the server's representation of the podAutoscaler, and an error, if there is any.
-func (c *podAutoscalers) Create(podAutoscaler *v1alpha1.PodAutoscaler) (result *v1alpha1.PodAutoscaler, err error) {
-	result = &v1alpha1.PodAutoscaler{}
+func (c *podAutoscalers) Create(podAutoscaler *v1beta1.PodAutoscaler) (result *v1beta1.PodAutoscaler, err error) {
+	result = &v1beta1.PodAutoscaler{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("podautoscalers").
@@ -106,8 +106,8 @@ func (c *podAutoscalers) Create(podAutoscaler *v1alpha1.PodAutoscaler) (result *
 }
 
 // Update takes the representation of a podAutoscaler and updates it. Returns the server's representation of the podAutoscaler, and an error, if there is any.
-func (c *podAutoscalers) Update(podAutoscaler *v1alpha1.PodAutoscaler) (result *v1alpha1.PodAutoscaler, err error) {
-	result = &v1alpha1.PodAutoscaler{}
+func (c *podAutoscalers) Update(podAutoscaler *v1beta1.PodAutoscaler) (result *v1beta1.PodAutoscaler, err error) {
+	result = &v1beta1.PodAutoscaler{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("podautoscalers").
@@ -121,8 +121,8 @@ func (c *podAutoscalers) Update(podAutoscaler *v1alpha1.PodAutoscaler) (result *
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 
-func (c *podAutoscalers) UpdateStatus(podAutoscaler *v1alpha1.PodAutoscaler) (result *v1alpha1.PodAutoscaler, err error) {
-	result = &v1alpha1.PodAutoscaler{}
+func (c *podAutoscalers) UpdateStatus(podAutoscaler *v1beta1.PodAutoscaler) (result *v1beta1.PodAutoscaler, err error) {
+	result = &v1beta1.PodAutoscaler{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("podautoscalers").
@@ -157,8 +157,8 @@ func (c *podAutoscalers) DeleteCollection(options *v1.DeleteOptions, listOptions
 }
 
 // Patch applies the patch and returns the patched podAutoscaler.
-func (c *podAutoscalers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.PodAutoscaler, err error) {
-	result = &v1alpha1.PodAutoscaler{}
+func (c *podAutoscalers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.PodAutoscaler, err error) {
+	result = &v1beta1.PodAutoscaler{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("podautoscalers").

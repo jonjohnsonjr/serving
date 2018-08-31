@@ -16,7 +16,7 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -27,29 +27,29 @@ import (
 
 // FakeRevisions implements RevisionInterface
 type FakeRevisions struct {
-	Fake *FakeServingV1alpha1
+	Fake *FakeServingV1beta1
 	ns   string
 }
 
-var revisionsResource = schema.GroupVersionResource{Group: "serving.knative.dev", Version: "v1alpha1", Resource: "revisions"}
+var revisionsResource = schema.GroupVersionResource{Group: "serving.knative.dev", Version: "v1beta1", Resource: "revisions"}
 
-var revisionsKind = schema.GroupVersionKind{Group: "serving.knative.dev", Version: "v1alpha1", Kind: "Revision"}
+var revisionsKind = schema.GroupVersionKind{Group: "serving.knative.dev", Version: "v1beta1", Kind: "Revision"}
 
 // Get takes name of the revision, and returns the corresponding revision object, and an error if there is any.
-func (c *FakeRevisions) Get(name string, options v1.GetOptions) (result *v1alpha1.Revision, err error) {
+func (c *FakeRevisions) Get(name string, options v1.GetOptions) (result *v1beta1.Revision, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(revisionsResource, c.ns, name), &v1alpha1.Revision{})
+		Invokes(testing.NewGetAction(revisionsResource, c.ns, name), &v1beta1.Revision{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Revision), err
+	return obj.(*v1beta1.Revision), err
 }
 
 // List takes label and field selectors, and returns the list of Revisions that match those selectors.
-func (c *FakeRevisions) List(opts v1.ListOptions) (result *v1alpha1.RevisionList, err error) {
+func (c *FakeRevisions) List(opts v1.ListOptions) (result *v1beta1.RevisionList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(revisionsResource, revisionsKind, c.ns, opts), &v1alpha1.RevisionList{})
+		Invokes(testing.NewListAction(revisionsResource, revisionsKind, c.ns, opts), &v1beta1.RevisionList{})
 
 	if obj == nil {
 		return nil, err
@@ -59,8 +59,8 @@ func (c *FakeRevisions) List(opts v1.ListOptions) (result *v1alpha1.RevisionList
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.RevisionList{ListMeta: obj.(*v1alpha1.RevisionList).ListMeta}
-	for _, item := range obj.(*v1alpha1.RevisionList).Items {
+	list := &v1beta1.RevisionList{ListMeta: obj.(*v1beta1.RevisionList).ListMeta}
+	for _, item := range obj.(*v1beta1.RevisionList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -76,43 +76,43 @@ func (c *FakeRevisions) Watch(opts v1.ListOptions) (watch.Interface, error) {
 }
 
 // Create takes the representation of a revision and creates it.  Returns the server's representation of the revision, and an error, if there is any.
-func (c *FakeRevisions) Create(revision *v1alpha1.Revision) (result *v1alpha1.Revision, err error) {
+func (c *FakeRevisions) Create(revision *v1beta1.Revision) (result *v1beta1.Revision, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(revisionsResource, c.ns, revision), &v1alpha1.Revision{})
+		Invokes(testing.NewCreateAction(revisionsResource, c.ns, revision), &v1beta1.Revision{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Revision), err
+	return obj.(*v1beta1.Revision), err
 }
 
 // Update takes the representation of a revision and updates it. Returns the server's representation of the revision, and an error, if there is any.
-func (c *FakeRevisions) Update(revision *v1alpha1.Revision) (result *v1alpha1.Revision, err error) {
+func (c *FakeRevisions) Update(revision *v1beta1.Revision) (result *v1beta1.Revision, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(revisionsResource, c.ns, revision), &v1alpha1.Revision{})
+		Invokes(testing.NewUpdateAction(revisionsResource, c.ns, revision), &v1beta1.Revision{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Revision), err
+	return obj.(*v1beta1.Revision), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeRevisions) UpdateStatus(revision *v1alpha1.Revision) (*v1alpha1.Revision, error) {
+func (c *FakeRevisions) UpdateStatus(revision *v1beta1.Revision) (*v1beta1.Revision, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(revisionsResource, "status", c.ns, revision), &v1alpha1.Revision{})
+		Invokes(testing.NewUpdateSubresourceAction(revisionsResource, "status", c.ns, revision), &v1beta1.Revision{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Revision), err
+	return obj.(*v1beta1.Revision), err
 }
 
 // Delete takes name of the revision and deletes it. Returns an error if one occurs.
 func (c *FakeRevisions) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(revisionsResource, c.ns, name), &v1alpha1.Revision{})
+		Invokes(testing.NewDeleteAction(revisionsResource, c.ns, name), &v1beta1.Revision{})
 
 	return err
 }
@@ -121,17 +121,17 @@ func (c *FakeRevisions) Delete(name string, options *v1.DeleteOptions) error {
 func (c *FakeRevisions) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(revisionsResource, c.ns, listOptions)
 
-	_, err := c.Fake.Invokes(action, &v1alpha1.RevisionList{})
+	_, err := c.Fake.Invokes(action, &v1beta1.RevisionList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched revision.
-func (c *FakeRevisions) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Revision, err error) {
+func (c *FakeRevisions) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.Revision, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(revisionsResource, c.ns, name, data, subresources...), &v1alpha1.Revision{})
+		Invokes(testing.NewPatchSubresourceAction(revisionsResource, c.ns, name, data, subresources...), &v1beta1.Revision{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Revision), err
+	return obj.(*v1beta1.Revision), err
 }
