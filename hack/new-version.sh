@@ -37,13 +37,13 @@ for DIR in $DIRS; do
   gomvpkg -from ${GO_FROM} -to ${GO_TO}
 done
 
-${SERVING_ROOT}/hack/update-codegen.sh
-
 for DIR in $DIRS; do
   PARENT=$(dirname $DIR)
   NEW_DIR="${PARENT}/${NEW_VERSION}"
-  echo git add $NEW_DIR
+  git add $NEW_DIR
 done
+
+git commit -m "Fork $OLD_VErSION to $NEW_VERSION"
 
 # TODO: Things that are hard.
 # * kpa_validation_test has error messages hard-coded with versions embedded.
