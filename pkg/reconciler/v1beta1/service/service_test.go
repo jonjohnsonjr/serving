@@ -351,9 +351,9 @@ func TestNew(t *testing.T) {
 	servingClient := fakeclientset.NewSimpleClientset()
 	servingInformer := informers.NewSharedInformerFactory(servingClient, 0)
 
-	serviceInformer := servingInformer.Serving().V1alpha1().Services()
-	routeInformer := servingInformer.Serving().V1alpha1().Routes()
-	configurationInformer := servingInformer.Serving().V1alpha1().Configurations()
+	serviceInformer := servingInformer.Serving().V1beta1().Services()
+	routeInformer := servingInformer.Serving().V1beta1().Routes()
+	configurationInformer := servingInformer.Serving().V1beta1().Configurations()
 
 	c := NewController(reconciler.Options{
 		KubeClientSet:    kubeClient,

@@ -208,8 +208,8 @@ func newTestControllerWithConfig(t *testing.T, controllerConfig *config.Controll
 			Logger:           TestLogger(t),
 		},
 		vpaClient,
-		servingInformer.Serving().V1alpha1().Revisions(),
-		servingInformer.Autoscaling().V1alpha1().PodAutoscalers(),
+		servingInformer.Serving().V1beta1().Revisions(),
+		servingInformer.Autoscaling().V1beta1().PodAutoscalers(),
 		buildInformer.Build().V1alpha1().Builds(),
 		kubeInformer.Apps().V1().Deployments(),
 		kubeInformer.Core().V1().Services(),
@@ -230,7 +230,7 @@ func createRevision(t *testing.T,
 	t.Helper()
 	servingClient.ServingV1beta1().Revisions(rev.Namespace).Create(rev)
 	// Since Reconcile looks in the lister, we need to add it to the informer
-	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
+	servingInformer.Serving().V1beta1().Revisions().Informer().GetIndexer().Add(rev)
 
 	if err := controller.Reconciler.Reconcile(context.TODO(), KeyOrDie(rev)); err == nil {
 		rev, _, _ = addResourcesToInformers(t, kubeClient, kubeInformer, servingClient, servingInformer, rev)
@@ -244,7 +244,7 @@ func updateRevision(t *testing.T,
 	controller *ctrl.Impl, rev *v1beta1.Revision) {
 	t.Helper()
 	servingClient.ServingV1beta1().Revisions(rev.Namespace).Update(rev)
-	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Update(rev)
+	servingInformer.Serving().V1beta1().Revisions().Informer().GetIndexer().Update(rev)
 
 	if err := controller.Reconciler.Reconcile(context.TODO(), KeyOrDie(rev)); err == nil {
 		addResourcesToInformers(t, kubeClient, kubeInformer, servingClient, servingInformer, rev)
@@ -271,7 +271,7 @@ func addResourcesToInformers(t *testing.T,
 	if err != nil {
 		t.Errorf("Revisions.Get(%v) = %v", rev.Name, err)
 	}
-	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
+	servingInformer.Serving().V1beta1().Revisions().Informer().GetIndexer().Add(rev)
 
 	haveBuild := rev.Spec.BuildName != ""
 	inActive := rev.Spec.ServingState != "Active"
@@ -285,7 +285,7 @@ func addResourcesToInformers(t *testing.T,
 	} else if err != nil {
 		t.Errorf("PodAutoscalers.Get(%v) = %v", kpaName, err)
 	} else {
-		servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
+		servingInformer.Autoscaling().V1beta1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	}
 
 	deploymentName := resourcenames.Deployment(rev)
@@ -573,7 +573,7 @@ func TestMarkRevReadyUponEndpointBecomesReady(t *testing.T) {
 	endpoints := getTestReadyEndpoints(rev.Name)
 	kubeInformer.Core().V1().Endpoints().Informer().GetIndexer().Add(endpoints)
 	kpa := getTestReadyKPA(rev)
-	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
+	servingInformer.Autoscaling().V1beta1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	f := controller.Reconciler.(*Reconciler).EnqueueEndpointsRevision(controller)
 	f(endpoints)
 	controller.Reconciler.Reconcile(context.TODO(), KeyOrDie(rev))

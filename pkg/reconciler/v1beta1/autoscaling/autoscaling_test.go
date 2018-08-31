@@ -89,7 +89,7 @@ func TestControllerSynchronizesCreatesAndDeletes(t *testing.T) {
 
 	fakeMetrics := newTestKPAMetrics(createdCh, stopCh)
 	ctl := NewController(&opts,
-		servingInformer.Autoscaling().V1alpha1().PodAutoscalers(),
+		servingInformer.Autoscaling().V1beta1().PodAutoscalers(),
 		kubeInformer.Core().V1().Endpoints(),
 		fakeMetrics,
 		kpaScaler,
@@ -97,13 +97,13 @@ func TestControllerSynchronizesCreatesAndDeletes(t *testing.T) {
 
 	rev := newTestRevision(testNamespace, testRevision)
 	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
-	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
+	servingInformer.Serving().V1beta1().Revisions().Informer().GetIndexer().Add(rev)
 	ep := addEndpoint(makeEndpoints(rev))
 	kubeClient.CoreV1().Endpoints(testNamespace).Create(ep)
 	kubeInformer.Core().V1().Endpoints().Informer().GetIndexer().Add(ep)
 	kpa := revisionresources.MakeKPA(rev)
 	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
-	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
+	servingInformer.Autoscaling().V1beta1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	reconcileDone := make(chan struct{})
 	go func() {
 		defer close(reconcileDone)
@@ -137,9 +137,9 @@ func TestControllerSynchronizesCreatesAndDeletes(t *testing.T) {
 	}
 
 	servingClient.ServingV1beta1().Revisions(testNamespace).Delete(testRevision, nil)
-	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Delete(rev)
+	servingInformer.Serving().V1beta1().Revisions().Informer().GetIndexer().Delete(rev)
 	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Delete(testRevision, nil)
-	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Delete(kpa)
+	servingInformer.Autoscaling().V1beta1().PodAutoscalers().Informer().GetIndexer().Delete(kpa)
 	err = ctl.Reconciler.Reconcile(context.TODO(), testNamespace+"/"+testRevision)
 	if err != nil {
 		t.Errorf("Reconcile() = %v", err)
@@ -176,7 +176,7 @@ func TestNoEndpointsActive(t *testing.T) {
 
 	fakeMetrics := newTestKPAMetrics(createdCh, stopCh)
 	ctl := NewController(&opts,
-		servingInformer.Autoscaling().V1alpha1().PodAutoscalers(),
+		servingInformer.Autoscaling().V1beta1().PodAutoscalers(),
 		kubeInformer.Core().V1().Endpoints(),
 		fakeMetrics,
 		kpaScaler,
@@ -184,14 +184,14 @@ func TestNoEndpointsActive(t *testing.T) {
 
 	rev := newTestRevision(testNamespace, testRevision)
 	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
-	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
+	servingInformer.Serving().V1beta1().Revisions().Informer().GetIndexer().Add(rev)
 	// These do not exist yet.
 	// ep := addEndpoint(makeEndpoints(rev))
 	// kubeClient.CoreV1().Endpoints(testNamespace).Create(ep)
 	// kubeInformer.Core().V1().Endpoints().Informer().GetIndexer().Add(ep)
 	kpa := revisionresources.MakeKPA(rev)
 	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
-	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
+	servingInformer.Autoscaling().V1beta1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	reconcileDone := make(chan struct{})
 	go func() {
 		defer close(reconcileDone)
@@ -237,7 +237,7 @@ func TestEmptyEndpointsActive(t *testing.T) {
 
 	fakeMetrics := newTestKPAMetrics(createdCh, stopCh)
 	ctl := NewController(&opts,
-		servingInformer.Autoscaling().V1alpha1().PodAutoscalers(),
+		servingInformer.Autoscaling().V1beta1().PodAutoscalers(),
 		kubeInformer.Core().V1().Endpoints(),
 		fakeMetrics,
 		kpaScaler,
@@ -245,14 +245,14 @@ func TestEmptyEndpointsActive(t *testing.T) {
 
 	rev := newTestRevision(testNamespace, testRevision)
 	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
-	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
+	servingInformer.Serving().V1beta1().Revisions().Informer().GetIndexer().Add(rev)
 	// This is empty still.
 	ep := makeEndpoints(rev)
 	kubeClient.CoreV1().Endpoints(testNamespace).Create(ep)
 	kubeInformer.Core().V1().Endpoints().Informer().GetIndexer().Add(ep)
 	kpa := revisionresources.MakeKPA(rev)
 	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
-	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
+	servingInformer.Autoscaling().V1beta1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	reconcileDone := make(chan struct{})
 	go func() {
 		defer close(reconcileDone)
@@ -298,7 +298,7 @@ func TestNoEndpointsReserve(t *testing.T) {
 
 	fakeMetrics := newTestKPAMetrics(createdCh, stopCh)
 	ctl := NewController(&opts,
-		servingInformer.Autoscaling().V1alpha1().PodAutoscalers(),
+		servingInformer.Autoscaling().V1beta1().PodAutoscalers(),
 		kubeInformer.Core().V1().Endpoints(),
 		fakeMetrics,
 		kpaScaler,
@@ -307,14 +307,14 @@ func TestNoEndpointsReserve(t *testing.T) {
 	rev := newTestRevision(testNamespace, testRevision)
 	rev.Spec.ServingState = "Reserve"
 	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
-	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
+	servingInformer.Serving().V1beta1().Revisions().Informer().GetIndexer().Add(rev)
 	// These do not exist yet.
 	// ep := addEndpoint(makeEndpoints(rev))
 	// kubeClient.CoreV1().Endpoints(testNamespace).Create(ep)
 	// kubeInformer.Core().V1().Endpoints().Informer().GetIndexer().Add(ep)
 	kpa := revisionresources.MakeKPA(rev)
 	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
-	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
+	servingInformer.Autoscaling().V1beta1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	reconcileDone := make(chan struct{})
 	go func() {
 		defer close(reconcileDone)
@@ -360,7 +360,7 @@ func TestReserveWithEndpoints(t *testing.T) {
 
 	fakeMetrics := newTestKPAMetrics(createdCh, stopCh)
 	ctl := NewController(&opts,
-		servingInformer.Autoscaling().V1alpha1().PodAutoscalers(),
+		servingInformer.Autoscaling().V1beta1().PodAutoscalers(),
 		kubeInformer.Core().V1().Endpoints(),
 		fakeMetrics,
 		kpaScaler,
@@ -369,13 +369,13 @@ func TestReserveWithEndpoints(t *testing.T) {
 	rev := newTestRevision(testNamespace, testRevision)
 	rev.Spec.ServingState = "Reserve"
 	servingClient.ServingV1beta1().Revisions(testNamespace).Create(rev)
-	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
+	servingInformer.Serving().V1beta1().Revisions().Informer().GetIndexer().Add(rev)
 	ep := addEndpoint(makeEndpoints(rev))
 	kubeClient.CoreV1().Endpoints(testNamespace).Create(ep)
 	kubeInformer.Core().V1().Endpoints().Informer().GetIndexer().Add(ep)
 	kpa := revisionresources.MakeKPA(rev)
 	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
-	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
+	servingInformer.Autoscaling().V1beta1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	reconcileDone := make(chan struct{})
 	go func() {
 		defer close(reconcileDone)
@@ -418,7 +418,7 @@ func TestControllerCreateError(t *testing.T) {
 	kpaScaler := NewKPAScaler(servingClient, scaleClient, TestLogger(t), newConfigWatcher())
 
 	ctl := NewController(&opts,
-		servingInformer.Autoscaling().V1alpha1().PodAutoscalers(),
+		servingInformer.Autoscaling().V1beta1().PodAutoscalers(),
 		kubeInformer.Core().V1().Endpoints(),
 		&failingKPAMetrics{
 			getErr:    errors.NewNotFound(kpa.Resource("Metrics"), key),
@@ -429,7 +429,7 @@ func TestControllerCreateError(t *testing.T) {
 
 	kpa := revisionresources.MakeKPA(newTestRevision(testNamespace, testRevision))
 	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
-	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
+	servingInformer.Autoscaling().V1beta1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 
 	got := ctl.Reconciler.Reconcile(context.TODO(), key)
 	if got != want {
@@ -456,7 +456,7 @@ func TestControllerUpdateError(t *testing.T) {
 	kpaScaler := NewKPAScaler(servingClient, scaleClient, TestLogger(t), newConfigWatcher())
 
 	ctl := NewController(&opts,
-		servingInformer.Autoscaling().V1alpha1().PodAutoscalers(),
+		servingInformer.Autoscaling().V1beta1().PodAutoscalers(),
 		kubeInformer.Core().V1().Endpoints(),
 		&failingKPAMetrics{
 			getErr:    errors.NewNotFound(kpa.Resource("Metrics"), key),
@@ -467,7 +467,7 @@ func TestControllerUpdateError(t *testing.T) {
 
 	kpa := revisionresources.MakeKPA(newTestRevision(testNamespace, testRevision))
 	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
-	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
+	servingInformer.Autoscaling().V1beta1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 
 	got := ctl.Reconciler.Reconcile(context.TODO(), key)
 	if got != want {
@@ -494,7 +494,7 @@ func TestControllerGetError(t *testing.T) {
 	kpaScaler := NewKPAScaler(servingClient, scaleClient, TestLogger(t), newConfigWatcher())
 
 	ctl := NewController(&opts,
-		servingInformer.Autoscaling().V1alpha1().PodAutoscalers(),
+		servingInformer.Autoscaling().V1beta1().PodAutoscalers(),
 		kubeInformer.Core().V1().Endpoints(),
 		&failingKPAMetrics{
 			getErr: want,
@@ -504,7 +504,7 @@ func TestControllerGetError(t *testing.T) {
 
 	kpa := revisionresources.MakeKPA(newTestRevision(testNamespace, testRevision))
 	servingClient.AutoscalingV1beta1().PodAutoscalers(testNamespace).Create(kpa)
-	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
+	servingInformer.Autoscaling().V1beta1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 
 	got := ctl.Reconciler.Reconcile(context.TODO(), key)
 	if got != want {
@@ -534,7 +534,7 @@ func TestScaleFailure(t *testing.T) {
 
 	fakeMetrics := newTestKPAMetrics(createdCh, stopCh)
 	ctl := NewController(&opts,
-		servingInformer.Autoscaling().V1alpha1().PodAutoscalers(),
+		servingInformer.Autoscaling().V1beta1().PodAutoscalers(),
 		kubeInformer.Core().V1().Endpoints(),
 		fakeMetrics,
 		kpaScaler,
@@ -543,7 +543,7 @@ func TestScaleFailure(t *testing.T) {
 	// Only put the KPA in the lister, which will prompt failures scaling it.
 	rev := newTestRevision(testNamespace, testRevision)
 	kpa := revisionresources.MakeKPA(rev)
-	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
+	servingInformer.Autoscaling().V1beta1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	go func() {
 		err := ctl.Reconciler.Reconcile(context.TODO(), testNamespace+"/"+testRevision)
 		if err == nil {
@@ -575,7 +575,7 @@ func TestBadKey(t *testing.T) {
 	kpaScaler := NewKPAScaler(servingClient, scaleClient, TestLogger(t), newConfigWatcher())
 
 	ctl := NewController(&opts,
-		servingInformer.Autoscaling().V1alpha1().PodAutoscalers(),
+		servingInformer.Autoscaling().V1beta1().PodAutoscalers(),
 		kubeInformer.Core().V1().Endpoints(),
 		&failingKPAMetrics{},
 		kpaScaler,

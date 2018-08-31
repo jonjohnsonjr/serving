@@ -21,6 +21,9 @@ set -o pipefail
 OLD_VERSION=$1
 NEW_VERSION=$2
 
+UPPERCASE_OLD_VERSION=$(echo ${OLD_VERSION} | sed 's/./V/1')
+UPPERCASE_NEW_VERSION=$(echo ${NEW_VERSION} | sed 's/./V/1')
+
 # I'm lazy, so assuming this 
 SERVING_ROOT=$(dirname ${BASH_SOURCE})/..
 
@@ -43,14 +46,25 @@ for DIR in $DIRS; do
   git add $NEW_DIR
 done
 
-git commit -m "Fork $OLD_VErSION to $NEW_VERSION"
+git commit -m "Fork $OLD_VERSION to $NEW_VERSION"
 
-# find ./ -type f -exec sed -i -e 's/ServingV1alpha1/ServingV1beta1/g' {} \;
-# find ./ -type f -exec sed -i -e 's/AutoscalingV1alpha1/AutoscalingV1beta1/g' {} \;
-# sed -i "s/${OLD_VERSION}/${NEW_VERSION}/g" pkg/apis/autoscaling/${NEW_VERSION}/kpa_validation_test.go
+${SERVING_ROOT}/hack/update-deps.sh
+
+git commit -am "Run update-deps.sh"
+
+find ${SERVING_ROOT}/ -type f -exec sed -i -e "s/Serving${UPPERCASE_OLD_VERSION}/Serving${UPPERCASE_NEW_VERSION}/g" {} \;
+find ${SERVING_ROOT}/ -type f -exec sed -i -e "s/Autoscaling${UPPERCASE_OLD_VERSION}/Autoscaling${UPPERCASE_NEW_VERSION}/g" {} \;
+find ${SERVING_ROOT}/ -type f -exec sed -i "s/Autoscaling().${UPPERCASE_OLD_VERSION}()/Autoscaling().${UPPERCASE_NEW_VERSION}()/g" {} \;
+find ${SERVING_ROOT}/ -type f -exec sed -i "s/Serving().${UPPERCASE_OLD_VERSION}()/Serving().${UPPERCASE_NEW_VERSION}()/g" {} \;
+
+sed -i "s/${OLD_VERSION}/${NEW_VERSION}/g" "${SERVING_ROOT}/pkg/apis/autoscaling/${NEW_VERSION}/kpa_validation_test.go"
+sed -i "s/${OLD_VERSION}/${NEW_VERSION}/g" "${SERVING_ROOT}/pkg/apis/serving/${NEW_VERSION}/register.go"
+sed -i "s/${OLD_VERSION}/${NEW_VERSION}/g" "${SERVING_ROOT}/pkg/apis/autoscaling/${NEW_VERSION}/register.go"
 
 
 # TODO: Things that are hard.
 # * kpa_validation_test has error messages hard-coded with versions embedded.
 # * pkg/apis/serving/${NEW_VERSION}/register.go s/old/new/
 # * pkg/apis/autoscaling/${NEW_VERSION}/register.go s/old/new/
+#
+# * NewController takes listers

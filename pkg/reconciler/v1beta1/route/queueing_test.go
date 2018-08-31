@@ -92,9 +92,9 @@ func TestNewRouteCallsSyncHandler(t *testing.T) {
 			ConfigMapWatcher: configMapWatcher,
 			Logger:           TestLogger(t),
 		},
-		servingInformer.Serving().V1alpha1().Routes(),
-		servingInformer.Serving().V1alpha1().Configurations(),
-		servingInformer.Serving().V1alpha1().Revisions(),
+		servingInformer.Serving().V1beta1().Routes(),
+		servingInformer.Serving().V1beta1().Configurations(),
+		servingInformer.Serving().V1beta1().Revisions(),
 		kubeInformer.Core().V1().Services(),
 		sharedInformer.Networking().V1alpha3().VirtualServices(),
 	)
