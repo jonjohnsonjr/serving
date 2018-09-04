@@ -40,6 +40,10 @@ required = [
   # HEAD as of 2018-08-06
   revision = "5f7b0e4895413d785ff15b84d218d73e8a47866a"
 
+[[constraint]]
+  name = "k8s.io/autoscaler"
+  revision = "04b95d13c846a8ede6c9af8457701ca9baf081a8"
+
 [[override]]
   name = "k8s.io/api"
   version = "kubernetes-1.11.0"
