@@ -36,7 +36,6 @@ const (
 	PortNumber = 80
 	PortName   = "http"
 
-	DefaultRouteTimeout       = "60s"
 	DefaultRouteRetryAttempts = 3
 )
 
@@ -148,17 +147,35 @@ func makeVirtualServiceRoute(domains []string, ns string, targets []traffic.Revi
 			Weight: t.Percent,
 		})
 	}
+	timeout := fmt.Sprintf("%ds", getRouteTimeout(targets))
 	route := v1alpha3.HTTPRoute{
 		Match:   matches,
 		Route:   weights,
-		Timeout: DefaultRouteTimeout,
+		Timeout: timeout,
 		Retries: &v1alpha3.HTTPRetry{
 			Attempts:      DefaultRouteRetryAttempts,
-			PerTryTimeout: DefaultRouteTimeout,
+			PerTryTimeout: timeout,
 		},
 	}
 	// Add traffic rules for activator.
 	return addActivatorRoutes(&route, ns, inactive)
+}
+
+func getRouteTimeout(targets []traffic.RevisionTarget) int {
+	maxTimeoutSeconds := 0
+	for _, t := range targets {
+		if t.Percent == 0 {
+			continue
+		}
+		targetTimeoutSeconds := t.TimeoutSeconds
+		if targetTimeoutSeconds == 0 {
+			targetTimeoutSeconds = v1beta1.DefaultRevisionTimeoutSeconds
+		}
+		if maxTimeoutSeconds < targetTimeoutSeconds {
+			maxTimeoutSeconds = targetTimeoutSeconds
+		}
+	}
+	return maxTimeoutSeconds
 }
 
 /////////////////////////////////////////////////

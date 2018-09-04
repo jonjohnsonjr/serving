@@ -44,7 +44,9 @@ func TestServiceDefaulting(t *testing.T) {
 				RunLatest: &RunLatestType{
 					Configuration: ConfigurationSpec{
 						RevisionTemplate: RevisionTemplateSpec{
-							Spec: RevisionSpec{},
+							Spec: RevisionSpec{
+								TimeoutSeconds: DefaultRevisionTimeoutSeconds,
+							},
 						},
 					},
 				},
@@ -59,6 +61,7 @@ func TestServiceDefaulting(t *testing.T) {
 						RevisionTemplate: RevisionTemplateSpec{
 							Spec: RevisionSpec{
 								ContainerConcurrency: 1,
+								TimeoutSeconds: 10,
 							},
 						},
 					},
@@ -72,6 +75,7 @@ func TestServiceDefaulting(t *testing.T) {
 						RevisionTemplate: RevisionTemplateSpec{
 							Spec: RevisionSpec{
 								ContainerConcurrency: 1,
+								TimeoutSeconds: 10,
 							},
 						},
 					},
@@ -90,7 +94,9 @@ func TestServiceDefaulting(t *testing.T) {
 				Pinned: &PinnedType{
 					Configuration: ConfigurationSpec{
 						RevisionTemplate: RevisionTemplateSpec{
-							Spec: RevisionSpec{},
+							Spec: RevisionSpec{
+								TimeoutSeconds: DefaultRevisionTimeoutSeconds,
+							},
 						},
 					},
 				},
@@ -105,6 +111,7 @@ func TestServiceDefaulting(t *testing.T) {
 						RevisionTemplate: RevisionTemplateSpec{
 							Spec: RevisionSpec{
 								ContainerConcurrency: 1,
+								TimeoutSeconds: 10,
 							},
 						},
 					},
@@ -118,6 +125,7 @@ func TestServiceDefaulting(t *testing.T) {
 						RevisionTemplate: RevisionTemplateSpec{
 							Spec: RevisionSpec{
 								ContainerConcurrency: 1,
+								TimeoutSeconds: 10,
 							},
 						},
 					},

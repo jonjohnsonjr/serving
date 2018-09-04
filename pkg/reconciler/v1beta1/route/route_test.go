@@ -62,7 +62,7 @@ const (
 func getTestRouteWithTrafficTargets(traffic []v1beta1.TrafficTarget) *v1beta1.Route {
 	return &v1beta1.Route{
 		ObjectMeta: metav1.ObjectMeta{
-			SelfLink:  "/apis/serving/v1alpha1/namespaces/test/Routes/test-route",
+			SelfLink:  "/apis/serving/v1beta1/namespaces/test/Routes/test-route",
 			Name:      "test-route",
 			Namespace: testNamespace,
 			Labels: map[string]string{
@@ -86,7 +86,7 @@ func getTestRevision(name string) *v1beta1.Revision {
 func getTestRevisionWithCondition(name string, cond v1beta1.RevisionCondition) *v1beta1.Revision {
 	return &v1beta1.Revision{
 		ObjectMeta: metav1.ObjectMeta{
-			SelfLink:  fmt.Sprintf("/apis/serving/v1alpha1/namespaces/test/revisions/%s", name),
+			SelfLink:  fmt.Sprintf("/apis/serving/v1beta1/namespaces/test/revisions/%s", name),
 			Name:      name,
 			Namespace: testNamespace,
 		},
@@ -105,7 +105,7 @@ func getTestRevisionWithCondition(name string, cond v1beta1.RevisionCondition) *
 func getTestConfiguration() *v1beta1.Configuration {
 	return &v1beta1.Configuration{
 		ObjectMeta: metav1.ObjectMeta{
-			SelfLink:  "/apis/serving/v1alpha1/namespaces/test/revisiontemplates/test-config",
+			SelfLink:  "/apis/serving/v1beta1/namespaces/test/revisiontemplates/test-config",
 			Name:      "test-config",
 			Namespace: testNamespace,
 		},
@@ -126,7 +126,7 @@ func getTestConfiguration() *v1beta1.Configuration {
 func getTestRevisionForConfig(config *v1beta1.Configuration) *v1beta1.Revision {
 	rev := &v1beta1.Revision{
 		ObjectMeta: metav1.ObjectMeta{
-			SelfLink:  "/apis/serving/v1alpha1/namespaces/test/revisions/p-deadbeef",
+			SelfLink:  "/apis/serving/v1beta1/namespaces/test/revisions/p-deadbeef",
 			Name:      "p-deadbeef",
 			Namespace: testNamespace,
 			Labels: map[string]string{
@@ -325,6 +325,7 @@ func TestCreateRouteForOneReserveRevision(t *testing.T) {
 		t.Errorf("Unexpected rule owner refs diff (-want +got): %v", diff)
 	}
 	domain := strings.Join([]string{route.Name, route.Namespace, defaultDomainSuffix}, ".")
+	timeout := fmt.Sprintf("%ds", v1beta1.DefaultRevisionTimeoutSeconds)
 	expectedSpec := v1alpha3.VirtualServiceSpec{
 		// We want to connect to two Gateways: the Route's ingress
 		// Gateway, and the 'mesh' Gateway.  The former provides
@@ -357,10 +358,10 @@ func TestCreateRouteForOneReserveRevision(t *testing.T) {
 				rclr.GetConfigurationHeader():     "test-config",
 				rclr.GetRevisionHeaderNamespace(): testNamespace,
 			},
-			Timeout: resources.DefaultRouteTimeout,
+			Timeout: timeout,
 			Retries: &v1alpha3.HTTPRetry{
 				Attempts:      resources.DefaultRouteRetryAttempts,
-				PerTryTimeout: resources.DefaultRouteTimeout,
+				PerTryTimeout: timeout,
 			},
 		}},
 	}
@@ -414,6 +415,7 @@ func TestCreateRouteWithMultipleTargets(t *testing.T) {
 	}
 
 	domain := strings.Join([]string{route.Name, route.Namespace, defaultDomainSuffix}, ".")
+	timeout := fmt.Sprintf("%ds", v1beta1.DefaultRevisionTimeoutSeconds)
 	expectedSpec := v1alpha3.VirtualServiceSpec{
 		// We want to connect to two Gateways: the Route's ingress
 		// Gateway, and the 'mesh' Gateway.  The former provides
@@ -453,10 +455,10 @@ func TestCreateRouteWithMultipleTargets(t *testing.T) {
 				},
 				Weight: 10,
 			}},
-			Timeout: resources.DefaultRouteTimeout,
+			Timeout: timeout,
 			Retries: &v1alpha3.HTTPRetry{
 				Attempts:      resources.DefaultRouteRetryAttempts,
-				PerTryTimeout: resources.DefaultRouteTimeout,
+				PerTryTimeout: timeout,
 			},
 		}},
 	}
@@ -512,6 +514,7 @@ func TestCreateRouteWithOneTargetReserve(t *testing.T) {
 	}
 
 	domain := strings.Join([]string{route.Name, route.Namespace, defaultDomainSuffix}, ".")
+	timeout := fmt.Sprintf("%ds", v1beta1.DefaultRevisionTimeoutSeconds)
 	expectedSpec := v1alpha3.VirtualServiceSpec{
 		// We want to connect to two Gateways: the Route's ingress
 		// Gateway, and the 'mesh' Gateway.  The former provides
@@ -550,10 +553,10 @@ func TestCreateRouteWithOneTargetReserve(t *testing.T) {
 				rclr.GetConfigurationHeader():     "test-config",
 				rclr.GetRevisionHeaderNamespace(): testNamespace,
 			},
-			Timeout: resources.DefaultRouteTimeout,
+			Timeout: timeout,
 			Retries: &v1alpha3.HTTPRetry{
 				Attempts:      resources.DefaultRouteRetryAttempts,
-				PerTryTimeout: resources.DefaultRouteTimeout,
+				PerTryTimeout: timeout,
 			},
 		}},
 	}
@@ -622,6 +625,7 @@ func TestCreateRouteWithDuplicateTargets(t *testing.T) {
 	}
 
 	domain := strings.Join([]string{route.Name, route.Namespace, defaultDomainSuffix}, ".")
+	timeout := fmt.Sprintf("%ds", v1beta1.DefaultRevisionTimeoutSeconds)
 	expectedSpec := v1alpha3.VirtualServiceSpec{
 		// We want to connect to two Gateways: the Route's ingress
 		// Gateway, and the 'mesh' Gateway.  The former provides
@@ -661,10 +665,10 @@ func TestCreateRouteWithDuplicateTargets(t *testing.T) {
 				},
 				Weight: 50,
 			}},
-			Timeout: resources.DefaultRouteTimeout,
+			Timeout: timeout,
 			Retries: &v1alpha3.HTTPRetry{
 				Attempts:      resources.DefaultRouteRetryAttempts,
-				PerTryTimeout: resources.DefaultRouteTimeout,
+				PerTryTimeout: timeout,
 			},
 		}, {
 			Match: []v1alpha3.HTTPMatchRequest{{Authority: &istiov1alpha1.StringMatch{Exact: "test-revision-1." + domain}}},
@@ -675,10 +679,10 @@ func TestCreateRouteWithDuplicateTargets(t *testing.T) {
 				},
 				Weight: 100,
 			}},
-			Timeout: resources.DefaultRouteTimeout,
+			Timeout: timeout,
 			Retries: &v1alpha3.HTTPRetry{
 				Attempts:      resources.DefaultRouteRetryAttempts,
-				PerTryTimeout: resources.DefaultRouteTimeout,
+				PerTryTimeout: timeout,
 			},
 		}, {
 			Match: []v1alpha3.HTTPMatchRequest{{Authority: &istiov1alpha1.StringMatch{Exact: "test-revision-2." + domain}}},
@@ -689,10 +693,10 @@ func TestCreateRouteWithDuplicateTargets(t *testing.T) {
 				},
 				Weight: 100,
 			}},
-			Timeout: resources.DefaultRouteTimeout,
+			Timeout: timeout,
 			Retries: &v1alpha3.HTTPRetry{
 				Attempts:      resources.DefaultRouteRetryAttempts,
-				PerTryTimeout: resources.DefaultRouteTimeout,
+				PerTryTimeout: timeout,
 			},
 		}},
 	}
@@ -746,6 +750,7 @@ func TestCreateRouteWithNamedTargets(t *testing.T) {
 		t.Fatalf("error getting virtualservice: %v", err)
 	}
 	domain := strings.Join([]string{route.Name, route.Namespace, defaultDomainSuffix}, ".")
+	timeout := fmt.Sprintf("%ds", v1beta1.DefaultRevisionTimeoutSeconds)
 	expectedSpec := v1alpha3.VirtualServiceSpec{
 		// We want to connect to two Gateways: the Route's ingress
 		// Gateway, and the 'mesh' Gateway.  The former provides
@@ -785,10 +790,10 @@ func TestCreateRouteWithNamedTargets(t *testing.T) {
 				},
 				Weight: 50,
 			}},
-			Timeout: resources.DefaultRouteTimeout,
+			Timeout: timeout,
 			Retries: &v1alpha3.HTTPRetry{
 				Attempts:      resources.DefaultRouteRetryAttempts,
-				PerTryTimeout: resources.DefaultRouteTimeout,
+				PerTryTimeout: timeout,
 			},
 		}, {
 			Match: []v1alpha3.HTTPMatchRequest{{Authority: &istiov1alpha1.StringMatch{Exact: "bar." + domain}}},
@@ -799,10 +804,10 @@ func TestCreateRouteWithNamedTargets(t *testing.T) {
 				},
 				Weight: 100,
 			}},
-			Timeout: resources.DefaultRouteTimeout,
+			Timeout: timeout,
 			Retries: &v1alpha3.HTTPRetry{
 				Attempts:      resources.DefaultRouteRetryAttempts,
-				PerTryTimeout: resources.DefaultRouteTimeout,
+				PerTryTimeout: timeout,
 			},
 		}, {
 			Match: []v1alpha3.HTTPMatchRequest{{Authority: &istiov1alpha1.StringMatch{Exact: "foo." + domain}}},
@@ -813,10 +818,10 @@ func TestCreateRouteWithNamedTargets(t *testing.T) {
 				},
 				Weight: 100,
 			}},
-			Timeout: resources.DefaultRouteTimeout,
+			Timeout: timeout,
 			Retries: &v1alpha3.HTTPRetry{
 				Attempts:      resources.DefaultRouteRetryAttempts,
-				PerTryTimeout: resources.DefaultRouteTimeout,
+				PerTryTimeout: timeout,
 			},
 		}},
 	}

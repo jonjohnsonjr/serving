@@ -27,6 +27,8 @@ import (
 type RevisionTarget struct {
 	v1beta1.TrafficTarget
 	Active bool
+	// The request timeout of the target revision.
+	TimeoutSeconds int
 }
 
 // TrafficConfig encapsulates details of our traffic so that we don't need to make API calls, or use details of the
@@ -161,6 +163,7 @@ func (t *trafficConfigBuilder) addConfigurationTarget(tt *v1beta1.TrafficTarget)
 	target := RevisionTarget{
 		TrafficTarget: *tt,
 		Active:        !rev.Status.IsActivationRequired(),
+		TimeoutSeconds: rev.Spec.TimeoutSeconds,
 	}
 	target.TrafficTarget.RevisionName = rev.Name
 	t.addFlattenedTarget(target)
@@ -178,6 +181,7 @@ func (t *trafficConfigBuilder) addRevisionTarget(tt *v1beta1.TrafficTarget) erro
 	target := RevisionTarget{
 		TrafficTarget: *tt,
 		Active:        !rev.Status.IsActivationRequired(),
+		TimeoutSeconds: rev.Spec.TimeoutSeconds,
 	}
 	t.revisions[tt.RevisionName] = rev
 	if configName, ok := rev.Labels[serving.ConfigurationLabelKey]; ok {
