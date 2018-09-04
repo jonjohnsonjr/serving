@@ -17,7 +17,9 @@ package scheme
 
 import (
 	autoscalingv1alpha1 "github.com/knative/serving/pkg/apis/autoscaling/v1alpha1"
+	autoscalingv1beta1 "github.com/knative/serving/pkg/apis/autoscaling/v1beta1"
 	servingv1alpha1 "github.com/knative/serving/pkg/apis/serving/v1alpha1"
+	servingv1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -49,5 +51,7 @@ func init() {
 // correctly.
 func AddToScheme(scheme *runtime.Scheme) {
 	autoscalingv1alpha1.AddToScheme(scheme)
+	autoscalingv1beta1.AddToScheme(scheme)
 	servingv1alpha1.AddToScheme(scheme)
+	servingv1beta1.AddToScheme(scheme)
 }

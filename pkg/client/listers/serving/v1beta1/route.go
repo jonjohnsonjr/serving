@@ -16,7 +16,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1alpha1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
@@ -25,7 +25,7 @@ import (
 // RouteLister helps list Routes.
 type RouteLister interface {
 	// List lists all Routes in the indexer.
-	List(selector labels.Selector) (ret []*v1alpha1.Route, err error)
+	List(selector labels.Selector) (ret []*v1beta1.Route, err error)
 	// Routes returns an object that can list and get Routes.
 	Routes(namespace string) RouteNamespaceLister
 	RouteListerExpansion
@@ -42,9 +42,9 @@ func NewRouteLister(indexer cache.Indexer) RouteLister {
 }
 
 // List lists all Routes in the indexer.
-func (s *routeLister) List(selector labels.Selector) (ret []*v1alpha1.Route, err error) {
+func (s *routeLister) List(selector labels.Selector) (ret []*v1beta1.Route, err error) {
 	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.Route))
+		ret = append(ret, m.(*v1beta1.Route))
 	})
 	return ret, err
 }
@@ -57,9 +57,9 @@ func (s *routeLister) Routes(namespace string) RouteNamespaceLister {
 // RouteNamespaceLister helps list and get Routes.
 type RouteNamespaceLister interface {
 	// List lists all Routes in the indexer for a given namespace.
-	List(selector labels.Selector) (ret []*v1alpha1.Route, err error)
+	List(selector labels.Selector) (ret []*v1beta1.Route, err error)
 	// Get retrieves the Route from the indexer for a given namespace and name.
-	Get(name string) (*v1alpha1.Route, error)
+	Get(name string) (*v1beta1.Route, error)
 	RouteNamespaceListerExpansion
 }
 
@@ -71,21 +71,21 @@ type routeNamespaceLister struct {
 }
 
 // List lists all Routes in the indexer for a given namespace.
-func (s routeNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.Route, err error) {
+func (s routeNamespaceLister) List(selector labels.Selector) (ret []*v1beta1.Route, err error) {
 	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.Route))
+		ret = append(ret, m.(*v1beta1.Route))
 	})
 	return ret, err
 }
 
 // Get retrieves the Route from the indexer for a given namespace and name.
-func (s routeNamespaceLister) Get(name string) (*v1alpha1.Route, error) {
+func (s routeNamespaceLister) Get(name string) (*v1beta1.Route, error) {
 	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
 	if err != nil {
 		return nil, err
 	}
 	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("route"), name)
+		return nil, errors.NewNotFound(v1beta1.Resource("route"), name)
 	}
-	return obj.(*v1alpha1.Route), nil
+	return obj.(*v1beta1.Route), nil
 }

@@ -16,7 +16,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1alpha1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
@@ -25,7 +25,7 @@ import (
 // ServiceLister helps list Services.
 type ServiceLister interface {
 	// List lists all Services in the indexer.
-	List(selector labels.Selector) (ret []*v1alpha1.Service, err error)
+	List(selector labels.Selector) (ret []*v1beta1.Service, err error)
 	// Services returns an object that can list and get Services.
 	Services(namespace string) ServiceNamespaceLister
 	ServiceListerExpansion
@@ -42,9 +42,9 @@ func NewServiceLister(indexer cache.Indexer) ServiceLister {
 }
 
 // List lists all Services in the indexer.
-func (s *serviceLister) List(selector labels.Selector) (ret []*v1alpha1.Service, err error) {
+func (s *serviceLister) List(selector labels.Selector) (ret []*v1beta1.Service, err error) {
 	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.Service))
+		ret = append(ret, m.(*v1beta1.Service))
 	})
 	return ret, err
 }
@@ -57,9 +57,9 @@ func (s *serviceLister) Services(namespace string) ServiceNamespaceLister {
 // ServiceNamespaceLister helps list and get Services.
 type ServiceNamespaceLister interface {
 	// List lists all Services in the indexer for a given namespace.
-	List(selector labels.Selector) (ret []*v1alpha1.Service, err error)
+	List(selector labels.Selector) (ret []*v1beta1.Service, err error)
 	// Get retrieves the Service from the indexer for a given namespace and name.
-	Get(name string) (*v1alpha1.Service, error)
+	Get(name string) (*v1beta1.Service, error)
 	ServiceNamespaceListerExpansion
 }
 
@@ -71,21 +71,21 @@ type serviceNamespaceLister struct {
 }
 
 // List lists all Services in the indexer for a given namespace.
-func (s serviceNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.Service, err error) {
+func (s serviceNamespaceLister) List(selector labels.Selector) (ret []*v1beta1.Service, err error) {
 	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.Service))
+		ret = append(ret, m.(*v1beta1.Service))
 	})
 	return ret, err
 }
 
 // Get retrieves the Service from the indexer for a given namespace and name.
-func (s serviceNamespaceLister) Get(name string) (*v1alpha1.Service, error) {
+func (s serviceNamespaceLister) Get(name string) (*v1beta1.Service, error) {
 	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
 	if err != nil {
 		return nil, err
 	}
 	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("service"), name)
+		return nil, errors.NewNotFound(v1beta1.Resource("service"), name)
 	}
-	return obj.(*v1alpha1.Service), nil
+	return obj.(*v1beta1.Service), nil
 }

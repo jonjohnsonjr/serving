@@ -18,10 +18,10 @@ package v1beta1
 import (
 	time "time"
 
-	serving_v1alpha1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	serving_v1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	versioned "github.com/knative/serving/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/knative/serving/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/knative/serving/pkg/client/listers/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/client/listers/serving/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -32,7 +32,7 @@ import (
 // Services.
 type ServiceInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.ServiceLister
+	Lister() v1beta1.ServiceLister
 }
 
 type serviceInformer struct {
@@ -58,16 +58,16 @@ func NewFilteredServiceInformer(client versioned.Interface, namespace string, re
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ServingV1alpha1().Services(namespace).List(options)
+				return client.ServingV1beta1().Services(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ServingV1alpha1().Services(namespace).Watch(options)
+				return client.ServingV1beta1().Services(namespace).Watch(options)
 			},
 		},
-		&serving_v1alpha1.Service{},
+		&serving_v1beta1.Service{},
 		resyncPeriod,
 		indexers,
 	)
@@ -78,9 +78,9 @@ func (f *serviceInformer) defaultInformer(client versioned.Interface, resyncPeri
 }
 
 func (f *serviceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&serving_v1alpha1.Service{}, f.defaultInformer)
+	return f.factory.InformerFor(&serving_v1beta1.Service{}, f.defaultInformer)
 }
 
-func (f *serviceInformer) Lister() v1alpha1.ServiceLister {
-	return v1alpha1.NewServiceLister(f.Informer().GetIndexer())
+func (f *serviceInformer) Lister() v1beta1.ServiceLister {
+	return v1beta1.NewServiceLister(f.Informer().GetIndexer())
 }

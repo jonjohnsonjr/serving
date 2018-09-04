@@ -16,13 +16,13 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1alpha1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	"github.com/knative/serving/pkg/client/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )
 
-type ServingV1alpha1Interface interface {
+type ServingV1beta1Interface interface {
 	RESTClient() rest.Interface
 	ConfigurationsGetter
 	RevisionsGetter
@@ -30,29 +30,29 @@ type ServingV1alpha1Interface interface {
 	ServicesGetter
 }
 
-// ServingV1alpha1Client is used to interact with features provided by the serving.knative.dev group.
-type ServingV1alpha1Client struct {
+// ServingV1beta1Client is used to interact with features provided by the serving.knative.dev group.
+type ServingV1beta1Client struct {
 	restClient rest.Interface
 }
 
-func (c *ServingV1alpha1Client) Configurations(namespace string) ConfigurationInterface {
+func (c *ServingV1beta1Client) Configurations(namespace string) ConfigurationInterface {
 	return newConfigurations(c, namespace)
 }
 
-func (c *ServingV1alpha1Client) Revisions(namespace string) RevisionInterface {
+func (c *ServingV1beta1Client) Revisions(namespace string) RevisionInterface {
 	return newRevisions(c, namespace)
 }
 
-func (c *ServingV1alpha1Client) Routes(namespace string) RouteInterface {
+func (c *ServingV1beta1Client) Routes(namespace string) RouteInterface {
 	return newRoutes(c, namespace)
 }
 
-func (c *ServingV1alpha1Client) Services(namespace string) ServiceInterface {
+func (c *ServingV1beta1Client) Services(namespace string) ServiceInterface {
 	return newServices(c, namespace)
 }
 
-// NewForConfig creates a new ServingV1alpha1Client for the given config.
-func NewForConfig(c *rest.Config) (*ServingV1alpha1Client, error) {
+// NewForConfig creates a new ServingV1beta1Client for the given config.
+func NewForConfig(c *rest.Config) (*ServingV1beta1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -61,12 +61,12 @@ func NewForConfig(c *rest.Config) (*ServingV1alpha1Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ServingV1alpha1Client{client}, nil
+	return &ServingV1beta1Client{client}, nil
 }
 
-// NewForConfigOrDie creates a new ServingV1alpha1Client for the given config and
+// NewForConfigOrDie creates a new ServingV1beta1Client for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *ServingV1alpha1Client {
+func NewForConfigOrDie(c *rest.Config) *ServingV1beta1Client {
 	client, err := NewForConfig(c)
 	if err != nil {
 		panic(err)
@@ -74,13 +74,13 @@ func NewForConfigOrDie(c *rest.Config) *ServingV1alpha1Client {
 	return client
 }
 
-// New creates a new ServingV1alpha1Client for the given RESTClient.
-func New(c rest.Interface) *ServingV1alpha1Client {
-	return &ServingV1alpha1Client{c}
+// New creates a new ServingV1beta1Client for the given RESTClient.
+func New(c rest.Interface) *ServingV1beta1Client {
+	return &ServingV1beta1Client{c}
 }
 
 func setConfigDefaults(config *rest.Config) error {
-	gv := v1alpha1.SchemeGroupVersion
+	gv := v1beta1.SchemeGroupVersion
 	config.GroupVersion = &gv
 	config.APIPath = "/apis"
 	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: scheme.Codecs}
@@ -94,7 +94,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *ServingV1alpha1Client) RESTClient() rest.Interface {
+func (c *ServingV1beta1Client) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

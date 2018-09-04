@@ -18,10 +18,10 @@ package v1beta1
 import (
 	time "time"
 
-	serving_v1alpha1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	serving_v1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	versioned "github.com/knative/serving/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/knative/serving/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/knative/serving/pkg/client/listers/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/client/listers/serving/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -32,7 +32,7 @@ import (
 // Configurations.
 type ConfigurationInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.ConfigurationLister
+	Lister() v1beta1.ConfigurationLister
 }
 
 type configurationInformer struct {
@@ -58,16 +58,16 @@ func NewFilteredConfigurationInformer(client versioned.Interface, namespace stri
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ServingV1alpha1().Configurations(namespace).List(options)
+				return client.ServingV1beta1().Configurations(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ServingV1alpha1().Configurations(namespace).Watch(options)
+				return client.ServingV1beta1().Configurations(namespace).Watch(options)
 			},
 		},
-		&serving_v1alpha1.Configuration{},
+		&serving_v1beta1.Configuration{},
 		resyncPeriod,
 		indexers,
 	)
@@ -78,9 +78,9 @@ func (f *configurationInformer) defaultInformer(client versioned.Interface, resy
 }
 
 func (f *configurationInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&serving_v1alpha1.Configuration{}, f.defaultInformer)
+	return f.factory.InformerFor(&serving_v1beta1.Configuration{}, f.defaultInformer)
 }
 
-func (f *configurationInformer) Lister() v1alpha1.ConfigurationLister {
-	return v1alpha1.NewConfigurationLister(f.Informer().GetIndexer())
+func (f *configurationInformer) Lister() v1beta1.ConfigurationLister {
+	return v1beta1.NewConfigurationLister(f.Informer().GetIndexer())
 }

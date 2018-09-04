@@ -16,7 +16,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1alpha1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	scheme "github.com/knative/serving/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -32,15 +32,15 @@ type ConfigurationsGetter interface {
 
 // ConfigurationInterface has methods to work with Configuration resources.
 type ConfigurationInterface interface {
-	Create(*v1alpha1.Configuration) (*v1alpha1.Configuration, error)
-	Update(*v1alpha1.Configuration) (*v1alpha1.Configuration, error)
-	UpdateStatus(*v1alpha1.Configuration) (*v1alpha1.Configuration, error)
+	Create(*v1beta1.Configuration) (*v1beta1.Configuration, error)
+	Update(*v1beta1.Configuration) (*v1beta1.Configuration, error)
+	UpdateStatus(*v1beta1.Configuration) (*v1beta1.Configuration, error)
 	Delete(name string, options *v1.DeleteOptions) error
 	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha1.Configuration, error)
-	List(opts v1.ListOptions) (*v1alpha1.ConfigurationList, error)
+	Get(name string, options v1.GetOptions) (*v1beta1.Configuration, error)
+	List(opts v1.ListOptions) (*v1beta1.ConfigurationList, error)
 	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Configuration, err error)
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.Configuration, err error)
 	ConfigurationExpansion
 }
 
@@ -51,7 +51,7 @@ type configurations struct {
 }
 
 // newConfigurations returns a Configurations
-func newConfigurations(c *ServingV1alpha1Client, namespace string) *configurations {
+func newConfigurations(c *ServingV1beta1Client, namespace string) *configurations {
 	return &configurations{
 		client: c.RESTClient(),
 		ns:     namespace,
@@ -59,8 +59,8 @@ func newConfigurations(c *ServingV1alpha1Client, namespace string) *configuratio
 }
 
 // Get takes name of the configuration, and returns the corresponding configuration object, and an error if there is any.
-func (c *configurations) Get(name string, options v1.GetOptions) (result *v1alpha1.Configuration, err error) {
-	result = &v1alpha1.Configuration{}
+func (c *configurations) Get(name string, options v1.GetOptions) (result *v1beta1.Configuration, err error) {
+	result = &v1beta1.Configuration{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("configurations").
@@ -72,8 +72,8 @@ func (c *configurations) Get(name string, options v1.GetOptions) (result *v1alph
 }
 
 // List takes label and field selectors, and returns the list of Configurations that match those selectors.
-func (c *configurations) List(opts v1.ListOptions) (result *v1alpha1.ConfigurationList, err error) {
-	result = &v1alpha1.ConfigurationList{}
+func (c *configurations) List(opts v1.ListOptions) (result *v1beta1.ConfigurationList, err error) {
+	result = &v1beta1.ConfigurationList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("configurations").
@@ -94,8 +94,8 @@ func (c *configurations) Watch(opts v1.ListOptions) (watch.Interface, error) {
 }
 
 // Create takes the representation of a configuration and creates it.  Returns the server's representation of the configuration, and an error, if there is any.
-func (c *configurations) Create(configuration *v1alpha1.Configuration) (result *v1alpha1.Configuration, err error) {
-	result = &v1alpha1.Configuration{}
+func (c *configurations) Create(configuration *v1beta1.Configuration) (result *v1beta1.Configuration, err error) {
+	result = &v1beta1.Configuration{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("configurations").
@@ -106,8 +106,8 @@ func (c *configurations) Create(configuration *v1alpha1.Configuration) (result *
 }
 
 // Update takes the representation of a configuration and updates it. Returns the server's representation of the configuration, and an error, if there is any.
-func (c *configurations) Update(configuration *v1alpha1.Configuration) (result *v1alpha1.Configuration, err error) {
-	result = &v1alpha1.Configuration{}
+func (c *configurations) Update(configuration *v1beta1.Configuration) (result *v1beta1.Configuration, err error) {
+	result = &v1beta1.Configuration{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("configurations").
@@ -121,8 +121,8 @@ func (c *configurations) Update(configuration *v1alpha1.Configuration) (result *
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 
-func (c *configurations) UpdateStatus(configuration *v1alpha1.Configuration) (result *v1alpha1.Configuration, err error) {
-	result = &v1alpha1.Configuration{}
+func (c *configurations) UpdateStatus(configuration *v1beta1.Configuration) (result *v1beta1.Configuration, err error) {
+	result = &v1beta1.Configuration{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("configurations").
@@ -157,8 +157,8 @@ func (c *configurations) DeleteCollection(options *v1.DeleteOptions, listOptions
 }
 
 // Patch applies the patch and returns the patched configuration.
-func (c *configurations) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Configuration, err error) {
-	result = &v1alpha1.Configuration{}
+func (c *configurations) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.Configuration, err error) {
+	result = &v1beta1.Configuration{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("configurations").

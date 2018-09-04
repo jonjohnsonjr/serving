@@ -16,7 +16,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1alpha1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	scheme "github.com/knative/serving/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -32,15 +32,15 @@ type ServicesGetter interface {
 
 // ServiceInterface has methods to work with Service resources.
 type ServiceInterface interface {
-	Create(*v1alpha1.Service) (*v1alpha1.Service, error)
-	Update(*v1alpha1.Service) (*v1alpha1.Service, error)
-	UpdateStatus(*v1alpha1.Service) (*v1alpha1.Service, error)
+	Create(*v1beta1.Service) (*v1beta1.Service, error)
+	Update(*v1beta1.Service) (*v1beta1.Service, error)
+	UpdateStatus(*v1beta1.Service) (*v1beta1.Service, error)
 	Delete(name string, options *v1.DeleteOptions) error
 	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha1.Service, error)
-	List(opts v1.ListOptions) (*v1alpha1.ServiceList, error)
+	Get(name string, options v1.GetOptions) (*v1beta1.Service, error)
+	List(opts v1.ListOptions) (*v1beta1.ServiceList, error)
 	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Service, err error)
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.Service, err error)
 	ServiceExpansion
 }
 
@@ -51,7 +51,7 @@ type services struct {
 }
 
 // newServices returns a Services
-func newServices(c *ServingV1alpha1Client, namespace string) *services {
+func newServices(c *ServingV1beta1Client, namespace string) *services {
 	return &services{
 		client: c.RESTClient(),
 		ns:     namespace,
@@ -59,8 +59,8 @@ func newServices(c *ServingV1alpha1Client, namespace string) *services {
 }
 
 // Get takes name of the service, and returns the corresponding service object, and an error if there is any.
-func (c *services) Get(name string, options v1.GetOptions) (result *v1alpha1.Service, err error) {
-	result = &v1alpha1.Service{}
+func (c *services) Get(name string, options v1.GetOptions) (result *v1beta1.Service, err error) {
+	result = &v1beta1.Service{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("services").
@@ -72,8 +72,8 @@ func (c *services) Get(name string, options v1.GetOptions) (result *v1alpha1.Ser
 }
 
 // List takes label and field selectors, and returns the list of Services that match those selectors.
-func (c *services) List(opts v1.ListOptions) (result *v1alpha1.ServiceList, err error) {
-	result = &v1alpha1.ServiceList{}
+func (c *services) List(opts v1.ListOptions) (result *v1beta1.ServiceList, err error) {
+	result = &v1beta1.ServiceList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("services").
@@ -94,8 +94,8 @@ func (c *services) Watch(opts v1.ListOptions) (watch.Interface, error) {
 }
 
 // Create takes the representation of a service and creates it.  Returns the server's representation of the service, and an error, if there is any.
-func (c *services) Create(service *v1alpha1.Service) (result *v1alpha1.Service, err error) {
-	result = &v1alpha1.Service{}
+func (c *services) Create(service *v1beta1.Service) (result *v1beta1.Service, err error) {
+	result = &v1beta1.Service{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("services").
@@ -106,8 +106,8 @@ func (c *services) Create(service *v1alpha1.Service) (result *v1alpha1.Service, 
 }
 
 // Update takes the representation of a service and updates it. Returns the server's representation of the service, and an error, if there is any.
-func (c *services) Update(service *v1alpha1.Service) (result *v1alpha1.Service, err error) {
-	result = &v1alpha1.Service{}
+func (c *services) Update(service *v1beta1.Service) (result *v1beta1.Service, err error) {
+	result = &v1beta1.Service{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("services").
@@ -121,8 +121,8 @@ func (c *services) Update(service *v1alpha1.Service) (result *v1alpha1.Service, 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 
-func (c *services) UpdateStatus(service *v1alpha1.Service) (result *v1alpha1.Service, err error) {
-	result = &v1alpha1.Service{}
+func (c *services) UpdateStatus(service *v1beta1.Service) (result *v1beta1.Service, err error) {
+	result = &v1beta1.Service{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("services").
@@ -157,8 +157,8 @@ func (c *services) DeleteCollection(options *v1.DeleteOptions, listOptions v1.Li
 }
 
 // Patch applies the patch and returns the patched service.
-func (c *services) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Service, err error) {
-	result = &v1alpha1.Service{}
+func (c *services) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.Service, err error) {
+	result = &v1beta1.Service{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("services").

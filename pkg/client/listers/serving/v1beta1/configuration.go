@@ -16,7 +16,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1alpha1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
@@ -25,7 +25,7 @@ import (
 // ConfigurationLister helps list Configurations.
 type ConfigurationLister interface {
 	// List lists all Configurations in the indexer.
-	List(selector labels.Selector) (ret []*v1alpha1.Configuration, err error)
+	List(selector labels.Selector) (ret []*v1beta1.Configuration, err error)
 	// Configurations returns an object that can list and get Configurations.
 	Configurations(namespace string) ConfigurationNamespaceLister
 	ConfigurationListerExpansion
@@ -42,9 +42,9 @@ func NewConfigurationLister(indexer cache.Indexer) ConfigurationLister {
 }
 
 // List lists all Configurations in the indexer.
-func (s *configurationLister) List(selector labels.Selector) (ret []*v1alpha1.Configuration, err error) {
+func (s *configurationLister) List(selector labels.Selector) (ret []*v1beta1.Configuration, err error) {
 	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.Configuration))
+		ret = append(ret, m.(*v1beta1.Configuration))
 	})
 	return ret, err
 }
@@ -57,9 +57,9 @@ func (s *configurationLister) Configurations(namespace string) ConfigurationName
 // ConfigurationNamespaceLister helps list and get Configurations.
 type ConfigurationNamespaceLister interface {
 	// List lists all Configurations in the indexer for a given namespace.
-	List(selector labels.Selector) (ret []*v1alpha1.Configuration, err error)
+	List(selector labels.Selector) (ret []*v1beta1.Configuration, err error)
 	// Get retrieves the Configuration from the indexer for a given namespace and name.
-	Get(name string) (*v1alpha1.Configuration, error)
+	Get(name string) (*v1beta1.Configuration, error)
 	ConfigurationNamespaceListerExpansion
 }
 
@@ -71,21 +71,21 @@ type configurationNamespaceLister struct {
 }
 
 // List lists all Configurations in the indexer for a given namespace.
-func (s configurationNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.Configuration, err error) {
+func (s configurationNamespaceLister) List(selector labels.Selector) (ret []*v1beta1.Configuration, err error) {
 	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.Configuration))
+		ret = append(ret, m.(*v1beta1.Configuration))
 	})
 	return ret, err
 }
 
 // Get retrieves the Configuration from the indexer for a given namespace and name.
-func (s configurationNamespaceLister) Get(name string) (*v1alpha1.Configuration, error) {
+func (s configurationNamespaceLister) Get(name string) (*v1beta1.Configuration, error) {
 	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
 	if err != nil {
 		return nil, err
 	}
 	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("configuration"), name)
+		return nil, errors.NewNotFound(v1beta1.Resource("configuration"), name)
 	}
-	return obj.(*v1alpha1.Configuration), nil
+	return obj.(*v1beta1.Configuration), nil
 }

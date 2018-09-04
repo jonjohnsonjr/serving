@@ -16,34 +16,34 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/knative/serving/pkg/client/clientset/versioned/typed/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/client/clientset/versioned/typed/serving/v1beta1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeServingV1alpha1 struct {
+type FakeServingV1beta1 struct {
 	*testing.Fake
 }
 
-func (c *FakeServingV1alpha1) Configurations(namespace string) v1alpha1.ConfigurationInterface {
+func (c *FakeServingV1beta1) Configurations(namespace string) v1beta1.ConfigurationInterface {
 	return &FakeConfigurations{c, namespace}
 }
 
-func (c *FakeServingV1alpha1) Revisions(namespace string) v1alpha1.RevisionInterface {
+func (c *FakeServingV1beta1) Revisions(namespace string) v1beta1.RevisionInterface {
 	return &FakeRevisions{c, namespace}
 }
 
-func (c *FakeServingV1alpha1) Routes(namespace string) v1alpha1.RouteInterface {
+func (c *FakeServingV1beta1) Routes(namespace string) v1beta1.RouteInterface {
 	return &FakeRoutes{c, namespace}
 }
 
-func (c *FakeServingV1alpha1) Services(namespace string) v1alpha1.ServiceInterface {
+func (c *FakeServingV1beta1) Services(namespace string) v1beta1.ServiceInterface {
 	return &FakeServices{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeServingV1alpha1) RESTClient() rest.Interface {
+func (c *FakeServingV1beta1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

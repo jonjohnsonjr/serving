@@ -18,10 +18,10 @@ package v1beta1
 import (
 	time "time"
 
-	serving_v1alpha1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	serving_v1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	versioned "github.com/knative/serving/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/knative/serving/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/knative/serving/pkg/client/listers/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/client/listers/serving/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -32,7 +32,7 @@ import (
 // Routes.
 type RouteInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.RouteLister
+	Lister() v1beta1.RouteLister
 }
 
 type routeInformer struct {
@@ -58,16 +58,16 @@ func NewFilteredRouteInformer(client versioned.Interface, namespace string, resy
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ServingV1alpha1().Routes(namespace).List(options)
+				return client.ServingV1beta1().Routes(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ServingV1alpha1().Routes(namespace).Watch(options)
+				return client.ServingV1beta1().Routes(namespace).Watch(options)
 			},
 		},
-		&serving_v1alpha1.Route{},
+		&serving_v1beta1.Route{},
 		resyncPeriod,
 		indexers,
 	)
@@ -78,9 +78,9 @@ func (f *routeInformer) defaultInformer(client versioned.Interface, resyncPeriod
 }
 
 func (f *routeInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&serving_v1alpha1.Route{}, f.defaultInformer)
+	return f.factory.InformerFor(&serving_v1beta1.Route{}, f.defaultInformer)
 }
 
-func (f *routeInformer) Lister() v1alpha1.RouteLister {
-	return v1alpha1.NewRouteLister(f.Informer().GetIndexer())
+func (f *routeInformer) Lister() v1beta1.RouteLister {
+	return v1beta1.NewRouteLister(f.Informer().GetIndexer())
 }

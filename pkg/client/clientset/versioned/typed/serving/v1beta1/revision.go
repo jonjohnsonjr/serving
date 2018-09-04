@@ -16,7 +16,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1alpha1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
+	v1beta1 "github.com/knative/serving/pkg/apis/serving/v1beta1"
 	scheme "github.com/knative/serving/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -32,15 +32,15 @@ type RevisionsGetter interface {
 
 // RevisionInterface has methods to work with Revision resources.
 type RevisionInterface interface {
-	Create(*v1alpha1.Revision) (*v1alpha1.Revision, error)
-	Update(*v1alpha1.Revision) (*v1alpha1.Revision, error)
-	UpdateStatus(*v1alpha1.Revision) (*v1alpha1.Revision, error)
+	Create(*v1beta1.Revision) (*v1beta1.Revision, error)
+	Update(*v1beta1.Revision) (*v1beta1.Revision, error)
+	UpdateStatus(*v1beta1.Revision) (*v1beta1.Revision, error)
 	Delete(name string, options *v1.DeleteOptions) error
 	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
-	Get(name string, options v1.GetOptions) (*v1alpha1.Revision, error)
-	List(opts v1.ListOptions) (*v1alpha1.RevisionList, error)
+	Get(name string, options v1.GetOptions) (*v1beta1.Revision, error)
+	List(opts v1.ListOptions) (*v1beta1.RevisionList, error)
 	Watch(opts v1.ListOptions) (watch.Interface, error)
-	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Revision, err error)
+	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.Revision, err error)
 	RevisionExpansion
 }
 
@@ -51,7 +51,7 @@ type revisions struct {
 }
 
 // newRevisions returns a Revisions
-func newRevisions(c *ServingV1alpha1Client, namespace string) *revisions {
+func newRevisions(c *ServingV1beta1Client, namespace string) *revisions {
 	return &revisions{
 		client: c.RESTClient(),
 		ns:     namespace,
@@ -59,8 +59,8 @@ func newRevisions(c *ServingV1alpha1Client, namespace string) *revisions {
 }
 
 // Get takes name of the revision, and returns the corresponding revision object, and an error if there is any.
-func (c *revisions) Get(name string, options v1.GetOptions) (result *v1alpha1.Revision, err error) {
-	result = &v1alpha1.Revision{}
+func (c *revisions) Get(name string, options v1.GetOptions) (result *v1beta1.Revision, err error) {
+	result = &v1beta1.Revision{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("revisions").
@@ -72,8 +72,8 @@ func (c *revisions) Get(name string, options v1.GetOptions) (result *v1alpha1.Re
 }
 
 // List takes label and field selectors, and returns the list of Revisions that match those selectors.
-func (c *revisions) List(opts v1.ListOptions) (result *v1alpha1.RevisionList, err error) {
-	result = &v1alpha1.RevisionList{}
+func (c *revisions) List(opts v1.ListOptions) (result *v1beta1.RevisionList, err error) {
+	result = &v1beta1.RevisionList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("revisions").
@@ -94,8 +94,8 @@ func (c *revisions) Watch(opts v1.ListOptions) (watch.Interface, error) {
 }
 
 // Create takes the representation of a revision and creates it.  Returns the server's representation of the revision, and an error, if there is any.
-func (c *revisions) Create(revision *v1alpha1.Revision) (result *v1alpha1.Revision, err error) {
-	result = &v1alpha1.Revision{}
+func (c *revisions) Create(revision *v1beta1.Revision) (result *v1beta1.Revision, err error) {
+	result = &v1beta1.Revision{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("revisions").
@@ -106,8 +106,8 @@ func (c *revisions) Create(revision *v1alpha1.Revision) (result *v1alpha1.Revisi
 }
 
 // Update takes the representation of a revision and updates it. Returns the server's representation of the revision, and an error, if there is any.
-func (c *revisions) Update(revision *v1alpha1.Revision) (result *v1alpha1.Revision, err error) {
-	result = &v1alpha1.Revision{}
+func (c *revisions) Update(revision *v1beta1.Revision) (result *v1beta1.Revision, err error) {
+	result = &v1beta1.Revision{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("revisions").
@@ -121,8 +121,8 @@ func (c *revisions) Update(revision *v1alpha1.Revision) (result *v1alpha1.Revisi
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 
-func (c *revisions) UpdateStatus(revision *v1alpha1.Revision) (result *v1alpha1.Revision, err error) {
-	result = &v1alpha1.Revision{}
+func (c *revisions) UpdateStatus(revision *v1beta1.Revision) (result *v1beta1.Revision, err error) {
+	result = &v1beta1.Revision{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("revisions").
@@ -157,8 +157,8 @@ func (c *revisions) DeleteCollection(options *v1.DeleteOptions, listOptions v1.L
 }
 
 // Patch applies the patch and returns the patched revision.
-func (c *revisions) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Revision, err error) {
-	result = &v1alpha1.Revision{}
+func (c *revisions) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1beta1.Revision, err error) {
+	result = &v1beta1.Revision{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
 		Resource("revisions").
