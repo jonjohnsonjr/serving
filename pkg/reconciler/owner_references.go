@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/knative/serving/pkg/apis/serving/v1alpha1"
+	"github.com/knative/serving/pkg/apis/serving/v1beta1"
 )
 
 func kind(obj metav1.Object) schema.GroupVersionKind {
@@ -35,6 +36,15 @@ func kind(obj metav1.Object) schema.GroupVersionKind {
 		return v1alpha1.SchemeGroupVersion.WithKind("Configuration")
 	case *v1alpha1.Revision:
 		return v1alpha1.SchemeGroupVersion.WithKind("Revision")
+	// TODO: Move this file under pkg/reconciler/{version}.
+	case *v1beta1.Service:
+		return v1beta1.SchemeGroupVersion.WithKind("Service")
+	case *v1beta1.Route:
+		return v1beta1.SchemeGroupVersion.WithKind("Route")
+	case *v1beta1.Configuration:
+		return v1beta1.SchemeGroupVersion.WithKind("Configuration")
+	case *v1beta1.Revision:
+		return v1beta1.SchemeGroupVersion.WithKind("Revision")
 	default:
 		panic(fmt.Sprintf("Unsupported object type %T", obj))
 	}

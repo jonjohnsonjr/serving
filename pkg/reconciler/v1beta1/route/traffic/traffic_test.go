@@ -87,9 +87,9 @@ func setUp() {
 	servingClient := fakeclientset.NewSimpleClientset()
 
 	servingInformer := informers.NewSharedInformerFactory(servingClient, 0)
-	configInformer := servingInformer.Serving().V1alpha1().Configurations()
+	configInformer := servingInformer.Serving().V1beta1().Configurations()
 	configLister = configInformer.Lister()
-	revInformer := servingInformer.Serving().V1alpha1().Revisions()
+	revInformer := servingInformer.Serving().V1beta1().Revisions()
 	revLister = revInformer.Lister()
 
 	// Add these test objects to the informers.

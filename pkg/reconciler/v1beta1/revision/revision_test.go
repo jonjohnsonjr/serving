@@ -208,8 +208,8 @@ func newTestControllerWithConfig(t *testing.T, controllerConfig *config.Controll
 			Logger:           TestLogger(t),
 		},
 		vpaClient,
-		servingInformer.Serving().V1alpha1().Revisions(),
-		servingInformer.Autoscaling().V1alpha1().PodAutoscalers(),
+		servingInformer.Serving().V1beta1().Revisions(),
+		servingInformer.Autoscaling().V1beta1().PodAutoscalers(),
 		buildInformer.Build().V1alpha1().Builds(),
 		kubeInformer.Apps().V1().Deployments(),
 		kubeInformer.Core().V1().Services(),
@@ -228,9 +228,9 @@ func createRevision(t *testing.T,
 	servingClient *fakeclientset.Clientset, servingInformer informers.SharedInformerFactory,
 	controller *ctrl.Impl, rev *v1beta1.Revision) *v1beta1.Revision {
 	t.Helper()
-	servingClient.ServingV1alpha1().Revisions(rev.Namespace).Create(rev)
+	servingClient.ServingV1beta1().Revisions(rev.Namespace).Create(rev)
 	// Since Reconcile looks in the lister, we need to add it to the informer
-	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
+	servingInformer.Serving().V1beta1().Revisions().Informer().GetIndexer().Add(rev)
 
 	if err := controller.Reconciler.Reconcile(context.TODO(), KeyOrDie(rev)); err == nil {
 		rev, _, _ = addResourcesToInformers(t, kubeClient, kubeInformer, servingClient, servingInformer, rev)
@@ -243,8 +243,8 @@ func updateRevision(t *testing.T,
 	servingClient *fakeclientset.Clientset, servingInformer informers.SharedInformerFactory,
 	controller *ctrl.Impl, rev *v1beta1.Revision) {
 	t.Helper()
-	servingClient.ServingV1alpha1().Revisions(rev.Namespace).Update(rev)
-	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Update(rev)
+	servingClient.ServingV1beta1().Revisions(rev.Namespace).Update(rev)
+	servingInformer.Serving().V1beta1().Revisions().Informer().GetIndexer().Update(rev)
 
 	if err := controller.Reconciler.Reconcile(context.TODO(), KeyOrDie(rev)); err == nil {
 		addResourcesToInformers(t, kubeClient, kubeInformer, servingClient, servingInformer, rev)
@@ -267,11 +267,11 @@ func addResourcesToInformers(t *testing.T,
 	rev *v1beta1.Revision) (*v1beta1.Revision, *appsv1.Deployment, *corev1.Service) {
 	t.Helper()
 
-	rev, err := servingClient.ServingV1alpha1().Revisions(rev.Namespace).Get(rev.Name, metav1.GetOptions{})
+	rev, err := servingClient.ServingV1beta1().Revisions(rev.Namespace).Get(rev.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Errorf("Revisions.Get(%v) = %v", rev.Name, err)
 	}
-	servingInformer.Serving().V1alpha1().Revisions().Informer().GetIndexer().Add(rev)
+	servingInformer.Serving().V1beta1().Revisions().Informer().GetIndexer().Add(rev)
 
 	haveBuild := rev.Spec.BuildName != ""
 	inActive := rev.Spec.ServingState != "Active"
@@ -279,13 +279,13 @@ func addResourcesToInformers(t *testing.T,
 	ns := rev.Namespace
 
 	kpaName := resourcenames.KPA(rev)
-	kpa, err := servingClient.AutoscalingV1alpha1().PodAutoscalers(rev.Namespace).Get(kpaName, metav1.GetOptions{})
+	kpa, err := servingClient.AutoscalingV1beta1().PodAutoscalers(rev.Namespace).Get(kpaName, metav1.GetOptions{})
 	if apierrs.IsNotFound(err) && (haveBuild || inActive) {
 		// If we're doing a Build this won't exist yet.
 	} else if err != nil {
 		t.Errorf("PodAutoscalers.Get(%v) = %v", kpaName, err)
 	} else {
-		servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
+		servingInformer.Autoscaling().V1beta1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	}
 
 	deploymentName := resourcenames.Deployment(rev)
@@ -350,7 +350,7 @@ func TestResolutionFailed(t *testing.T) {
 
 	createRevision(t, kubeClient, kubeInformer, servingClient, servingInformer, controller, rev)
 
-	rev, err := servingClient.ServingV1alpha1().Revisions(testNamespace).Get(rev.Name, metav1.GetOptions{})
+	rev, err := servingClient.ServingV1beta1().Revisions(testNamespace).Get(rev.Name, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("Couldn't get revision: %v", err)
 	}
@@ -392,7 +392,7 @@ func TestCreateRevWithVPA(t *testing.T) {
 		},
 	}, getTestControllerConfigMap(),
 	)
-	revClient := servingClient.ServingV1alpha1().Revisions(testNamespace)
+	revClient := servingClient.ServingV1beta1().Revisions(testNamespace)
 	rev := getTestRevision()
 
 	if !controller.Reconciler.(*Reconciler).getAutoscalerConfig().EnableVPA {
@@ -432,7 +432,7 @@ func TestUpdateRevWithWithUpdatedLoggingURL(t *testing.T) {
 		},
 	}, getTestControllerConfigMap(),
 	)
-	revClient := servingClient.ServingV1alpha1().Revisions(testNamespace)
+	revClient := servingClient.ServingV1beta1().Revisions(testNamespace)
 
 	rev := getTestRevision()
 	createRevision(t, kubeClient, kubeInformer, servingClient, servingInformer, controller, rev)
@@ -573,7 +573,7 @@ func TestMarkRevReadyUponEndpointBecomesReady(t *testing.T) {
 	endpoints := getTestReadyEndpoints(rev.Name)
 	kubeInformer.Core().V1().Endpoints().Informer().GetIndexer().Add(endpoints)
 	kpa := getTestReadyKPA(rev)
-	servingInformer.Autoscaling().V1alpha1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
+	servingInformer.Autoscaling().V1beta1().PodAutoscalers().Informer().GetIndexer().Add(kpa)
 	f := controller.Reconciler.(*Reconciler).EnqueueEndpointsRevision(controller)
 	f(endpoints)
 	controller.Reconciler.Reconcile(context.TODO(), KeyOrDie(rev))

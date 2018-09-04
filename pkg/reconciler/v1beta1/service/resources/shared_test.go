@@ -45,7 +45,7 @@ func expectOwnerReferencesSetCorrectly(t *testing.T, ownerRefs []metav1.OwnerRef
 	}
 
 	expectedRefs := []metav1.OwnerReference{{
-		APIVersion: "serving.knative.dev/v1alpha1",
+		APIVersion: "serving.knative.dev/v1beta1",
 		Kind:       "Service",
 		Name:       testServiceName,
 	}}

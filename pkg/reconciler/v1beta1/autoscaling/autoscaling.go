@@ -237,7 +237,7 @@ func (c *Reconciler) updateStatus(kpa *kpa.PodAutoscaler) (*kpa.PodAutoscaler, e
 		newKPA.Status = kpa.Status
 
 		// TODO: for CRD there's no updatestatus, so use normal update
-		return c.ServingClientSet.AutoscalingV1alpha1().PodAutoscalers(kpa.Namespace).Update(newKPA)
+		return c.ServingClientSet.AutoscalingV1beta1().PodAutoscalers(kpa.Namespace).Update(newKPA)
 		//	return prClient.UpdateStatus(newKPA)
 	}
 	return kpa, nil

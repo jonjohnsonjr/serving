@@ -540,7 +540,7 @@ func TestImmutableFields(t *testing.T) {
 		want: &apis.FieldError{
 			Message: "Immutable fields changed (-old +new)",
 			Paths:   []string{"spec"},
-			Details: `{v1alpha1.RevisionSpec}.Container.Image:
+			Details: `{v1beta1.RevisionSpec}.Container.Image:
 	-: "busybox"
 	+: "helloworld"
 `,
@@ -568,9 +568,9 @@ func TestImmutableFields(t *testing.T) {
 		want: &apis.FieldError{
 			Message: "Immutable fields changed (-old +new)",
 			Paths:   []string{"spec"},
-			Details: `{v1alpha1.RevisionSpec}.ConcurrencyModel:
-	-: v1alpha1.RevisionRequestConcurrencyModelType("Single")
-	+: v1alpha1.RevisionRequestConcurrencyModelType("Multi")
+			Details: `{v1beta1.RevisionSpec}.ConcurrencyModel:
+	-: v1beta1.RevisionRequestConcurrencyModelType("Single")
+	+: v1beta1.RevisionRequestConcurrencyModelType("Multi")
 `,
 		},
 	}, {
@@ -596,10 +596,10 @@ func TestImmutableFields(t *testing.T) {
 		want: &apis.FieldError{
 			Message: "Immutable fields changed (-old +new)",
 			Paths:   []string{"spec"},
-			Details: `{v1alpha1.RevisionSpec}.ConcurrencyModel:
-	-: v1alpha1.RevisionRequestConcurrencyModelType("Single")
-	+: v1alpha1.RevisionRequestConcurrencyModelType("Multi")
-{v1alpha1.RevisionSpec}.Container.Image:
+			Details: `{v1beta1.RevisionSpec}.ConcurrencyModel:
+	-: v1beta1.RevisionRequestConcurrencyModelType("Single")
+	+: v1beta1.RevisionRequestConcurrencyModelType("Multi")
+{v1beta1.RevisionSpec}.Container.Image:
 	-: "busybox"
 	+: "helloworld"
 `,

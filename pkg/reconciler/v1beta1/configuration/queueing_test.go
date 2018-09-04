@@ -117,8 +117,8 @@ func newTestController(t *testing.T, servingObjects ...runtime.Object) (
 			BuildClientSet:   fakebuildclientset.NewSimpleClientset(),
 			Logger:           TestLogger(t),
 		},
-		servingInformer.Serving().V1alpha1().Configurations(),
-		servingInformer.Serving().V1alpha1().Revisions(),
+		servingInformer.Serving().V1beta1().Configurations(),
+		servingInformer.Serving().V1beta1().Revisions(),
 	)
 
 	return

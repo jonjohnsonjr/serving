@@ -204,7 +204,7 @@ func (c *Reconciler) createRevision(ctx context.Context, config *v1beta1.Configu
 	}
 
 	rev := resources.MakeRevision(config)
-	created, err := c.ServingClientSet.ServingV1alpha1().Revisions(config.Namespace).Create(rev)
+	created, err := c.ServingClientSet.ServingV1beta1().Revisions(config.Namespace).Create(rev)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +222,7 @@ func (c *Reconciler) updateStatus(u *v1beta1.Configuration) (*v1beta1.Configurat
 	if !reflect.DeepEqual(newu.Status, u.Status) {
 		newu.Status = u.Status
 		// TODO: for CRD there's no updatestatus, so use normal update
-		return c.ServingClientSet.ServingV1alpha1().Configurations(u.Namespace).Update(newu)
+		return c.ServingClientSet.ServingV1beta1().Configurations(u.Namespace).Update(newu)
 		//	return configClient.UpdateStatus(newu)
 	}
 	return newu, nil

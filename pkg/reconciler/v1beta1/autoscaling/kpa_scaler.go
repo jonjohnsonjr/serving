@@ -104,7 +104,7 @@ func (rs *kpaScaler) Scale(ctx context.Context, kpa *kpa.PodAutoscaler, desiredS
 	}
 
 	// Do not scale an inactive revision.
-	revisionClient := rs.servingClientSet.ServingV1alpha1().Revisions(kpa.Namespace)
+	revisionClient := rs.servingClientSet.ServingV1beta1().Revisions(kpa.Namespace)
 	rev, err := revisionClient.Get(owner.Name, metav1.GetOptions{})
 	if err != nil {
 		logger.Error("Unable to fetch Revision.", zap.Error(err))

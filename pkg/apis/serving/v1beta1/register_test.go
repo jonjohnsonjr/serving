@@ -30,7 +30,7 @@ func TestRegisterHelpers(t *testing.T) {
 		t.Errorf("Resource(Revision) = %v, want %v", got.String(), want)
 	}
 
-	if got, want := SchemeGroupVersion.String(), "serving.knative.dev/v1alpha1"; got != want {
+	if got, want := SchemeGroupVersion.String(), "serving.knative.dev/v1beta1"; got != want {
 		t.Errorf("SchemeGroupVersion() = %v, want %v", got, want)
 	}
 

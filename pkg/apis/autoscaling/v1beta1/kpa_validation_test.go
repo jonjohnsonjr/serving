@@ -314,9 +314,9 @@ func TestImmutableFields(t *testing.T) {
 		want: &apis.FieldError{
 			Message: "Immutable fields changed (-old +new)",
 			Paths:   []string{"spec"},
-			Details: `{v1alpha1.PodAutoscalerSpec}.ConcurrencyModel:
-	-: v1alpha1.RevisionRequestConcurrencyModelType("Single")
-	+: v1alpha1.RevisionRequestConcurrencyModelType("Multi")
+			Details: `{v1beta1.PodAutoscalerSpec}.ConcurrencyModel:
+	-: v1beta1.RevisionRequestConcurrencyModelType("Single")
+	+: v1beta1.RevisionRequestConcurrencyModelType("Multi")
 `,
 		},
 	}, {
@@ -348,9 +348,9 @@ func TestImmutableFields(t *testing.T) {
 		want: &apis.FieldError{
 			Message: "Immutable fields changed (-old +new)",
 			Paths:   []string{"spec"},
-			Details: `{v1alpha1.PodAutoscalerSpec}.ContainerConcurrency:
-	-: v1alpha1.RevisionContainerConcurrencyType(1)
-	+: v1alpha1.RevisionContainerConcurrencyType(0)
+			Details: `{v1beta1.PodAutoscalerSpec}.ContainerConcurrency:
+	-: v1beta1.RevisionContainerConcurrencyType(1)
+	+: v1beta1.RevisionContainerConcurrencyType(0)
 `,
 		},
 	}, {
@@ -382,13 +382,13 @@ func TestImmutableFields(t *testing.T) {
 		want: &apis.FieldError{
 			Message: "Immutable fields changed (-old +new)",
 			Paths:   []string{"spec"},
-			Details: `{v1alpha1.PodAutoscalerSpec}.ConcurrencyModel:
-	-: v1alpha1.RevisionRequestConcurrencyModelType("Single")
-	+: v1alpha1.RevisionRequestConcurrencyModelType("Multi")
-{v1alpha1.PodAutoscalerSpec}.ScaleTargetRef.Name:
+			Details: `{v1beta1.PodAutoscalerSpec}.ConcurrencyModel:
+	-: v1beta1.RevisionRequestConcurrencyModelType("Single")
+	+: v1beta1.RevisionRequestConcurrencyModelType("Multi")
+{v1beta1.PodAutoscalerSpec}.ScaleTargetRef.Name:
 	-: "baz"
 	+: "bar"
-{v1alpha1.PodAutoscalerSpec}.ServiceName:
+{v1beta1.PodAutoscalerSpec}.ServiceName:
 	-: "food"
 	+: "foo"
 `,

@@ -57,7 +57,7 @@ func (c *Reconciler) createDeployment(ctx context.Context, rev *v1beta1.Revision
 func (c *Reconciler) createKPA(ctx context.Context, rev *v1beta1.Revision) (*kpa.PodAutoscaler, error) {
 	kpa := resources.MakeKPA(rev)
 
-	return c.ServingClientSet.AutoscalingV1alpha1().PodAutoscalers(kpa.Namespace).Create(kpa)
+	return c.ServingClientSet.AutoscalingV1beta1().PodAutoscalers(kpa.Namespace).Create(kpa)
 }
 
 func (c *Reconciler) checkAndUpdateKPA(ctx context.Context, rev *v1beta1.Revision, kpa *kpa.PodAutoscaler) (*kpa.PodAutoscaler, Changed, error) {
@@ -72,7 +72,7 @@ func (c *Reconciler) checkAndUpdateKPA(ctx context.Context, rev *v1beta1.Revisio
 	}
 	logger.Infof("Reconciling kpa diff (-desired, +observed): %v", cmp.Diff(desiredKPA.Spec, kpa.Spec))
 	kpa.Spec = desiredKPA.Spec
-	kpa, err := c.ServingClientSet.AutoscalingV1alpha1().PodAutoscalers(kpa.Namespace).Update(kpa)
+	kpa, err := c.ServingClientSet.AutoscalingV1beta1().PodAutoscalers(kpa.Namespace).Update(kpa)
 	return kpa, WasChanged, err
 }
 
