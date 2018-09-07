@@ -18,7 +18,13 @@ metadata:
   name: podautoscalers.autoscaling.internal.knative.dev
 spec:
   group: autoscaling.internal.knative.dev
-  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+  - name: v1beta1
+    served: true
+    storage: false
   names:
     kind: PodAutoscaler
     plural: podautoscalers
