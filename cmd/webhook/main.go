@@ -26,8 +26,10 @@ import (
 	"github.com/knative/pkg/logging/logkey"
 	"github.com/knative/pkg/signals"
 	"github.com/knative/pkg/webhook"
-	kpa "github.com/knative/serving/pkg/apis/autoscaling/v1alpha1"
+	kpav1alpha1 "github.com/knative/serving/pkg/apis/autoscaling/v1alpha1"
+	kpav1beta1 "github.com/knative/serving/pkg/apis/autoscaling/v1beta1"
 	"github.com/knative/serving/pkg/apis/serving/v1alpha1"
+	"github.com/knative/serving/pkg/apis/serving/v1beta1"
 	"github.com/knative/serving/pkg/logging"
 	"github.com/knative/serving/pkg/system"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -88,11 +90,16 @@ func main() {
 		Client:  kubeClient,
 		Options: options,
 		Handlers: map[schema.GroupVersionKind]runtime.Object{
-			v1alpha1.SchemeGroupVersion.WithKind("Revision"):      &v1alpha1.Revision{},
-			v1alpha1.SchemeGroupVersion.WithKind("Configuration"): &v1alpha1.Configuration{},
-			v1alpha1.SchemeGroupVersion.WithKind("Route"):         &v1alpha1.Route{},
-			v1alpha1.SchemeGroupVersion.WithKind("Service"):       &v1alpha1.Service{},
-			kpa.SchemeGroupVersion.WithKind("PodAutoscaler"):      &kpa.PodAutoscaler{},
+			v1alpha1.SchemeGroupVersion.WithKind("Revision"):         &v1alpha1.Revision{},
+			v1alpha1.SchemeGroupVersion.WithKind("Configuration"):    &v1alpha1.Configuration{},
+			v1alpha1.SchemeGroupVersion.WithKind("Route"):            &v1alpha1.Route{},
+			v1alpha1.SchemeGroupVersion.WithKind("Service"):          &v1alpha1.Service{},
+			kpav1alpha1.SchemeGroupVersion.WithKind("PodAutoscaler"): &kpav1alpha1.PodAutoscaler{},
+			v1beta1.SchemeGroupVersion.WithKind("Revision"):          &v1beta1.Revision{},
+			v1beta1.SchemeGroupVersion.WithKind("Configuration"):     &v1beta1.Configuration{},
+			v1beta1.SchemeGroupVersion.WithKind("Route"):             &v1beta1.Route{},
+			v1beta1.SchemeGroupVersion.WithKind("Service"):           &v1beta1.Service{},
+			kpav1beta1.SchemeGroupVersion.WithKind("PodAutoscaler"):  &kpav1beta1.PodAutoscaler{},
 		},
 		Logger: logger,
 	}
