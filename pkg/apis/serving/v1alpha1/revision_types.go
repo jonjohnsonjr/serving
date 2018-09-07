@@ -164,6 +164,9 @@ type RevisionSpec struct {
 	// https://github.com/knative/serving/issues/627
 	// +optional
 	Container corev1.Container `json:"container,omitempty"`
+
+	// Added for compatibility with v1beta1.
+	TimeoutSeconds int `json:"timeoutSeconds,omitempty"`
 }
 
 // RevisionConditionType is used to communicate the status of the reconciliation process.
