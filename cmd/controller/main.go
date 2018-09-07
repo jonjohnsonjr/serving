@@ -35,6 +35,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
+
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
@@ -45,10 +46,10 @@ import (
 	"github.com/knative/pkg/signals"
 	clientset "github.com/knative/serving/pkg/client/clientset/versioned"
 	informers "github.com/knative/serving/pkg/client/informers/externalversions"
-	"github.com/knative/serving/pkg/reconciler/v1alpha1/configuration"
-	"github.com/knative/serving/pkg/reconciler/v1alpha1/revision"
-	"github.com/knative/serving/pkg/reconciler/v1alpha1/route"
-	"github.com/knative/serving/pkg/reconciler/v1alpha1/service"
+	"github.com/knative/serving/pkg/reconciler/v1beta1/configuration"
+	"github.com/knative/serving/pkg/reconciler/v1beta1/revision"
+	"github.com/knative/serving/pkg/reconciler/v1beta1/route"
+	"github.com/knative/serving/pkg/reconciler/v1beta1/service"
 )
 
 const (
@@ -125,11 +126,11 @@ func main() {
 		Logger:           logger,
 	}
 
-	serviceInformer := servingInformerFactory.Serving().V1alpha1().Services()
-	routeInformer := servingInformerFactory.Serving().V1alpha1().Routes()
-	configurationInformer := servingInformerFactory.Serving().V1alpha1().Configurations()
-	revisionInformer := servingInformerFactory.Serving().V1alpha1().Revisions()
-	kpaInformer := servingInformerFactory.Autoscaling().V1alpha1().PodAutoscalers()
+	serviceInformer := servingInformerFactory.Serving().V1beta1().Services()
+	routeInformer := servingInformerFactory.Serving().V1beta1().Routes()
+	configurationInformer := servingInformerFactory.Serving().V1beta1().Configurations()
+	revisionInformer := servingInformerFactory.Serving().V1beta1().Revisions()
+	kpaInformer := servingInformerFactory.Autoscaling().V1beta1().PodAutoscalers()
 	buildInformer := buildInformerFactory.Build().V1alpha1().Builds()
 	deploymentInformer := kubeInformerFactory.Apps().V1().Deployments()
 	coreServiceInformer := kubeInformerFactory.Core().V1().Services()
