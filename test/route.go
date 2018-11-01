@@ -121,7 +121,7 @@ func GetRouteProberError(errorChan <-chan error, logger *logging.BaseLogger) err
 	case err := <-errorChan:
 		return err
 	default:
-		logger.Info("No error happens in the Route prober.")
+		logger.Info("No issues in the Route prober 👍.")
 		return nil
 	}
 }
