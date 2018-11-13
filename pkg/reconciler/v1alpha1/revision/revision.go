@@ -18,7 +18,6 @@ package revision
 
 import (
 	"context"
-	"net/http"
 	"reflect"
 	"strings"
 
@@ -119,7 +118,6 @@ func NewController(
 	configMapInformer corev1informers.ConfigMapInformer,
 	buildInformerFactory duck.InformerFactory,
 ) *controller.Impl {
-
 	c := &Reconciler{
 		Base:             reconciler.NewBase(opt, controllerAgentName),
 		revisionLister:   revisionInformer.Lister(),
@@ -131,7 +129,7 @@ func NewController(
 		configMapLister:  configMapInformer.Lister(),
 		resolver: &digestResolver{
 			client:    opt.KubeClientSet,
-			transport: http.DefaultTransport,
+			transport: newResolverTransport(),
 		},
 	}
 	impl := controller.NewImpl(c, c.Logger, "Revisions", reconciler.MustNewStatsReporter("Revisions", c.Logger))

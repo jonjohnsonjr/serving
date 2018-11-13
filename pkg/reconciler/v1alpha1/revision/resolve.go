@@ -17,19 +17,55 @@ limitations under the License.
 package revision
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/google/go-containerregistry/pkg/authn/k8schain"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-
 	"k8s.io/client-go/kubernetes"
 )
 
 type digestResolver struct {
 	client    kubernetes.Interface
 	transport http.RoundTripper
+}
+
+const (
+	// Kubernetes CA certificate bundle is mounted into the pod here, see:
+	// https://kubernetes.io/docs/tasks/tls/managing-tls-in-a-cluster/#trusting-tls-in-a-cluster
+	k8sCert = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+
+	// OpenShift cluster-created CA certificate bundle is mounted into the pod here, see:
+	// https://docs.openshift.com/online/dev_guide/secrets.html#service-serving-certificate-secrets
+	openShiftCert = "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt"
+)
+
+// TODO: can we do this lazily so that we have a logger available?
+func newResolverTransport() *http.Transport {
+	roots, err := x509.SystemCertPool()
+	if err != nil {
+		roots = x509.NewCertPool()
+	}
+
+	paths := []string{k8sCert, openShiftCert}
+
+	for _, path := range paths {
+		if crt, err := ioutil.ReadFile(path); err != nil {
+			// Not fatal and we don't have a logger yet...
+		} else if ok := roots.AppendCertsFromPEM(crt); !ok {
+			// We don't have a logger yet :(
+		}
+	}
+
+	return &http.Transport{
+		TLSClientConfig: &tls.Config{
+			RootCAs: roots,
+		},
+	}
 }
 
 // Resolve resolves the image references that use tags to digests.
