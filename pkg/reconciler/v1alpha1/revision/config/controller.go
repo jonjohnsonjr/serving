@@ -20,6 +20,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/google/go-containerregistry/pkg/k8stransport"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -28,6 +29,7 @@ const (
 
 	queueSidecarImageKey           = "queueSidecarImage"
 	registriesSkippingTagResolving = "registriesSkippingTagResolving"
+	trustedCACertBundlePaths       = "trustedCACertBundlePaths"
 )
 
 // NewControllerConfigFromMap creates a Controller from the supplied Map
@@ -45,6 +47,13 @@ func NewControllerConfigFromMap(configMap map[string]string) (*Controller, error
 		nc.RegistriesSkippingTagResolving = make(map[string]struct{})
 	} else {
 		nc.RegistriesSkippingTagResolving = toStringSet(registries, ",")
+	}
+
+	if paths, ok := configMap[trustedCACertBundlePaths]; !ok {
+		// If missing, default to the kubernetes root CA cert bundle.
+		nc.TrustedCACertBundlePaths = []string{k8stransport.KubernetesCertBundle}
+	} else {
+		nc.TrustedCACertBundlePaths = strings.Split(paths, ",")
 	}
 	return nc, nil
 }
@@ -72,4 +81,7 @@ type Controller struct {
 
 	// Repositories for which tag to digest resolving should be skipped
 	RegistriesSkippingTagResolving map[string]struct{}
+
+	// Paths of CA cert bundles that we should trust for digest resolving.
+	TrustedCACertBundlePaths []string
 }

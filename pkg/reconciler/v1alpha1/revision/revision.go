@@ -18,6 +18,7 @@ package revision
 
 import (
 	"context"
+	"net/http"
 	"reflect"
 	"strings"
 
@@ -70,7 +71,7 @@ const (
 )
 
 type resolver interface {
-	Resolve(string, k8schain.Options, map[string]struct{}) (string, error)
+	Resolve(string, k8schain.Options, map[string]struct{}, []string) (string, error)
 }
 
 type configStore interface {
@@ -129,7 +130,7 @@ func NewController(
 		configMapLister:  configMapInformer.Lister(),
 		resolver: &digestResolver{
 			client:    opt.KubeClientSet,
-			transport: newResolverTransport(),
+			transport: http.Transport{},
 		},
 	}
 	impl := controller.NewImpl(c, c.Logger, "Revisions", reconciler.MustNewStatsReporter("Revisions", c.Logger))
@@ -318,7 +319,9 @@ func (c *Reconciler) reconcileDigest(ctx context.Context, rev *v1alpha1.Revision
 		// ImagePullSecrets: Not possible via RevisionSpec, since we
 		// don't expose such a field.
 	}
-	digest, err := c.resolver.Resolve(rev.Spec.Container.Image, opt, cfgs.Controller.RegistriesSkippingTagResolving)
+	skip := cfgs.Controller.RegistriesSkippingTagResolving
+	trust := cfgs.Controller.TrustedCACertBundlePaths
+	digest, err := c.resolver.Resolve(rev.Spec.Container.Image, opt, skip, trust)
 	if err != nil {
 		rev.Status.MarkContainerMissing(err.Error())
 		return err

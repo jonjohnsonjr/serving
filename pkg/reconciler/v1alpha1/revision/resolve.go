@@ -18,12 +18,11 @@ package revision
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/google/go-containerregistry/pkg/authn/k8schain"
+	"github.com/google/go-containerregistry/pkg/k8stransport"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"k8s.io/client-go/kubernetes"
@@ -31,41 +30,10 @@ import (
 
 type digestResolver struct {
 	client    kubernetes.Interface
-	transport http.RoundTripper
-}
+	transport http.Transport
 
-const (
-	// Kubernetes CA certificate bundle is mounted into the pod here, see:
-	// https://kubernetes.io/docs/tasks/tls/managing-tls-in-a-cluster/#trusting-tls-in-a-cluster
-	k8sCert = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-
-	// OpenShift cluster-created CA certificate bundle is mounted into the pod here, see:
-	// https://docs.openshift.com/online/dev_guide/secrets.html#service-serving-certificate-secrets
-	openShiftCert = "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt"
-)
-
-// TODO: can we do this lazily so that we have a logger available?
-func newResolverTransport() *http.Transport {
-	roots, err := x509.SystemCertPool()
-	if err != nil {
-		roots = x509.NewCertPool()
-	}
-
-	paths := []string{k8sCert, openShiftCert}
-
-	for _, path := range paths {
-		if crt, err := ioutil.ReadFile(path); err != nil {
-			// Not fatal and we don't have a logger yet...
-		} else if ok := roots.AppendCertsFromPEM(crt); !ok {
-			// We don't have a logger yet :(
-		}
-	}
-
-	return &http.Transport{
-		TLSClientConfig: &tls.Config{
-			RootCAs: roots,
-		},
-	}
+	// Holds a list of paths we have already added to the transport's cert bundle.
+	trusted map[string]struct{}
 }
 
 // Resolve resolves the image references that use tags to digests.
@@ -73,6 +41,7 @@ func (r *digestResolver) Resolve(
 	image string,
 	opt k8schain.Options,
 	registriesToSkip map[string]struct{},
+	certFilesToTrust []string,
 ) (string, error) {
 	kc, err := k8schain.New(r.client, opt)
 	if err != nil {
@@ -84,6 +53,10 @@ func (r *digestResolver) Resolve(
 		return image, nil
 	}
 
+	if err := r.trust(certFilesToTrust); err != nil {
+		return "", err
+	}
+
 	tag, err := name.NewTag(image, name.WeakValidation)
 	if err != nil {
 		return "", err
@@ -93,7 +66,7 @@ func (r *digestResolver) Resolve(
 		return "", nil
 	}
 
-	img, err := remote.Image(tag, remote.WithTransport(r.transport), remote.WithAuthFromKeychain(kc))
+	img, err := remote.Image(tag, remote.WithTransport(&r.transport), remote.WithAuthFromKeychain(kc))
 	if err != nil {
 		return "", err
 	}
@@ -102,4 +75,58 @@ func (r *digestResolver) Resolve(
 		return "", err
 	}
 	return fmt.Sprintf("%s@%s", tag.Repository.String(), digest), nil
+}
+
+// trust adds certificate bundles to the resolver's transport, as necessary.
+func (r *digestResolver) trust(certFiles []string) error {
+	if r.trusted == nil {
+		r.trusted = make(map[string]struct{})
+	}
+
+	// Construct a map of the new certs we need to trust.
+	newCerts := make(map[string]struct{})
+	for _, crt := range certFiles {
+		newCerts[crt] = struct{}{}
+	}
+
+	if r.transport.TLSClientConfig == nil {
+		r.transport.TLSClientConfig = &tls.Config{}
+	}
+
+	pool := r.transport.TLSClientConfig.RootCAs
+
+	// If we can't reuse the cert pool (or don't have one), just create a new one.
+	if !canReuseCertPool(r.trusted, newCerts) || pool == nil {
+		roots, err := k8stransport.NewCertPool(certFiles...)
+		if err != nil {
+			return err
+		}
+		r.transport.TLSClientConfig.RootCAs = roots
+		r.trusted = newCerts
+		return nil
+	}
+
+	// Append anything in newCerts that isn't already trusted.
+	for crt := range newCerts {
+		if _, ok := r.trusted[crt]; !ok {
+			if err := k8stransport.AppendCertBundle(pool, crt); err != nil {
+				return err
+			}
+			r.trusted[crt] = struct{}{}
+		}
+	}
+
+	return nil
+}
+
+func canReuseCertPool(oldCerts, newCerts map[string]struct{}) bool {
+	for crt, _ := range oldCerts {
+		if _, ok := newCerts[crt]; !ok {
+			// We are "untrusting" a path we trusted before, throw the CertPool away.
+			return false
+		}
+	}
+
+	// newCerts is a superset of oldCerts, so we can reuse the CertPool.
+	return true
 }
