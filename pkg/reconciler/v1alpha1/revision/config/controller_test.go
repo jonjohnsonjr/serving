@@ -20,11 +20,11 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-containerregistry/pkg/k8stransport"
+	. "github.com/knative/serving/pkg/reconciler/testing"
 	"github.com/knative/serving/pkg/system"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	. "github.com/knative/serving/pkg/reconciler/testing"
 )
 
 var noSidecarImage = ""
@@ -51,7 +51,8 @@ func TestControllerConfiguration(t *testing.T) {
 				"ko.local": {},
 				"":         {},
 			},
-			QueueSidecarImage: noSidecarImage,
+			QueueSidecarImage:        noSidecarImage,
+			TrustedCACertBundlePaths: []string{k8stransport.KubernetesCertBundle},
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -62,7 +63,8 @@ func TestControllerConfiguration(t *testing.T) {
 				queueSidecarImageKey:           noSidecarImage,
 				registriesSkippingTagResolving: "ko.local,,",
 			},
-		}}, {
+		},
+	}, {
 		name:    "controller configuration with registries",
 		wantErr: false,
 		wantController: &Controller{
@@ -70,7 +72,8 @@ func TestControllerConfiguration(t *testing.T) {
 				"ko.dev":   {},
 				"ko.local": {},
 			},
-			QueueSidecarImage: noSidecarImage,
+			QueueSidecarImage:        noSidecarImage,
+			TrustedCACertBundlePaths: []string{k8stransport.KubernetesCertBundle},
 		},
 		config: &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
@@ -80,6 +83,24 @@ func TestControllerConfiguration(t *testing.T) {
 			Data: map[string]string{
 				queueSidecarImageKey:           noSidecarImage,
 				registriesSkippingTagResolving: "ko.local,ko.dev",
+			},
+		},
+	}, {
+		name:    "controller configuration with certs",
+		wantErr: false,
+		wantController: &Controller{
+			RegistriesSkippingTagResolving: map[string]struct{}{},
+			QueueSidecarImage:              noSidecarImage,
+			TrustedCACertBundlePaths:       []string{"/etc/my/certs", "/foo"},
+		},
+		config: &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: system.Namespace,
+				Name:      ControllerConfigName,
+			},
+			Data: map[string]string{
+				queueSidecarImageKey:     noSidecarImage,
+				trustedCACertBundlePaths: "/etc/my/certs,/foo",
 			},
 		},
 	}, {

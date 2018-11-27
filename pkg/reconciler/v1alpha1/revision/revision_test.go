@@ -48,6 +48,7 @@ import (
 	"github.com/knative/serving/pkg/reconciler/v1alpha1/revision/config"
 	"github.com/knative/serving/pkg/reconciler/v1alpha1/revision/resources"
 	resourcenames "github.com/knative/serving/pkg/reconciler/v1alpha1/revision/resources/names"
+	. "github.com/knative/serving/pkg/reconciler/v1alpha1/testing"
 	"github.com/knative/serving/pkg/system"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -57,8 +58,6 @@ import (
 	fakedynamic "k8s.io/client-go/dynamic/fake"
 	kubeinformers "k8s.io/client-go/informers"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
-
-	. "github.com/knative/serving/pkg/reconciler/v1alpha1/testing"
 )
 
 func getTestConfiguration() *v1alpha1.Configuration {
@@ -347,7 +346,7 @@ type fixedResolver struct {
 	digest string
 }
 
-func (r *fixedResolver) Resolve(_ string, _ k8schain.Options, _ map[string]struct{}) (string, error) {
+func (r *fixedResolver) Resolve(_ string, _ k8schain.Options, _ map[string]struct{}, _ []string) (string, error) {
 	return r.digest, nil
 }
 
@@ -355,7 +354,7 @@ type errorResolver struct {
 	error string
 }
 
-func (r *errorResolver) Resolve(_ string, _ k8schain.Options, _ map[string]struct{}) (string, error) {
+func (r *errorResolver) Resolve(_ string, _ k8schain.Options, _ map[string]struct{}, _ []string) (string, error) {
 	return "", errors.New(r.error)
 }
 

@@ -36,6 +36,7 @@ import (
 )
 
 var emptyRegistrySet = map[string]struct{}{}
+var emptyCAList = []string{}
 
 func mustDigest(t *testing.T, img v1.Image) v1.Hash {
 	h, err := img.Digest()
@@ -155,12 +156,12 @@ func TestResolve(t *testing.T) {
 	})
 
 	// Resolve our tag on the fake registry to the digest of the random.Image()
-	dr := &digestResolver{client: client, transport: http.DefaultTransport}
+	dr := &digestResolver{client: client, transport: http.Transport{}}
 	opt := k8schain.Options{
 		Namespace:          ns,
 		ServiceAccountName: svcacct,
 	}
-	resolvedDigest, err := dr.Resolve(tag.String(), opt, emptyRegistrySet)
+	resolvedDigest, err := dr.Resolve(tag.String(), opt, emptyRegistrySet, emptyCAList)
 	if err != nil {
 		t.Fatalf("Resolve() = %v", err)
 	}
@@ -184,12 +185,12 @@ func TestResolveWithDigest(t *testing.T) {
 		},
 	})
 	originalDigest := "ubuntu@sha256:e7def0d56013d50204d73bb588d99e0baa7d69ea1bc1157549b898eb67287612"
-	dr := &digestResolver{client: client, transport: http.DefaultTransport}
+	dr := &digestResolver{client: client, transport: http.Transport{}}
 	opt := k8schain.Options{
 		Namespace:          ns,
 		ServiceAccountName: svcacct,
 	}
-	resolvedDigest, err := dr.Resolve(originalDigest, opt, emptyRegistrySet)
+	resolvedDigest, err := dr.Resolve(originalDigest, opt, emptyRegistrySet, emptyCAList)
 	if err != nil {
 		t.Fatalf("Resolve() = %v", err)
 	}
@@ -207,7 +208,7 @@ func TestResolveWithBadTag(t *testing.T) {
 			Namespace: ns,
 		},
 	})
-	dr := &digestResolver{client: client, transport: http.DefaultTransport}
+	dr := &digestResolver{client: client, transport: http.Transport{}}
 
 	opt := k8schain.Options{
 		Namespace:          ns,
@@ -216,7 +217,7 @@ func TestResolveWithBadTag(t *testing.T) {
 
 	// Invalid character
 	invalidImage := "ubuntu%latest"
-	if resolvedDigest, err := dr.Resolve(invalidImage, opt, emptyRegistrySet); err == nil {
+	if resolvedDigest, err := dr.Resolve(invalidImage, opt, emptyRegistrySet, emptyCAList); err == nil {
 		t.Fatalf("Resolve() = %v, want error", resolvedDigest)
 	}
 }
@@ -248,12 +249,12 @@ func TestResolveWithPingFailure(t *testing.T) {
 	})
 
 	// Resolve our tag on the fake registry to the digest of the random.Image()
-	dr := &digestResolver{client: client, transport: http.DefaultTransport}
+	dr := &digestResolver{client: client, transport: http.Transport{}}
 	opt := k8schain.Options{
 		Namespace:          ns,
 		ServiceAccountName: svcacct,
 	}
-	if resolvedDigest, err := dr.Resolve(tag.String(), opt, emptyRegistrySet); err == nil {
+	if resolvedDigest, err := dr.Resolve(tag.String(), opt, emptyRegistrySet, emptyCAList); err == nil {
 		t.Fatalf("Resolve() = %v, want error", resolvedDigest)
 	}
 }
@@ -285,12 +286,12 @@ func TestResolveWithManifestFailure(t *testing.T) {
 	})
 
 	// Resolve our tag on the fake registry to the digest of the random.Image()
-	dr := &digestResolver{client: client, transport: http.DefaultTransport}
+	dr := &digestResolver{client: client, transport: http.Transport{}}
 	opt := k8schain.Options{
 		Namespace:          ns,
 		ServiceAccountName: svcacct,
 	}
-	if resolvedDigest, err := dr.Resolve(tag.String(), opt, emptyRegistrySet); err == nil {
+	if resolvedDigest, err := dr.Resolve(tag.String(), opt, emptyRegistrySet, emptyCAList); err == nil {
 		t.Fatalf("Resolve() = %v, want error", resolvedDigest)
 	}
 }
@@ -298,13 +299,13 @@ func TestResolveWithManifestFailure(t *testing.T) {
 func TestResolveNoAccess(t *testing.T) {
 	ns, svcacct := "foo", "default"
 	client := fakeclient.NewSimpleClientset()
-	dr := &digestResolver{client: client, transport: http.DefaultTransport}
+	dr := &digestResolver{client: client, transport: http.Transport{}}
 	opt := k8schain.Options{
 		Namespace:          ns,
 		ServiceAccountName: svcacct,
 	}
 	// If there is a failure accessing the ServiceAccount for this Pod, then we should see an error.
-	if resolvedDigest, err := dr.Resolve("ubuntu:latest", opt, emptyRegistrySet); err == nil {
+	if resolvedDigest, err := dr.Resolve("ubuntu:latest", opt, emptyRegistrySet, emptyCAList); err == nil {
 		t.Fatalf("Resolve() = %v, want error", resolvedDigest)
 	}
 }
@@ -337,7 +338,7 @@ func TestResolveSkippingRegistry(t *testing.T) {
 	})
 	dr := &digestResolver{
 		client:    client,
-		transport: http.DefaultTransport,
+		transport: http.Transport{},
 	}
 
 	registriesToSkip := map[string]struct{}{
@@ -349,7 +350,7 @@ func TestResolveSkippingRegistry(t *testing.T) {
 		ServiceAccountName: svcacct,
 	}
 
-	resolvedDigest, err := dr.Resolve("localhost:5000/ubuntu:latest", opt, registriesToSkip)
+	resolvedDigest, err := dr.Resolve("localhost:5000/ubuntu:latest", opt, registriesToSkip, emptyCAList)
 	if err != nil {
 		t.Fatalf("Resolve() = %v", err)
 	}
