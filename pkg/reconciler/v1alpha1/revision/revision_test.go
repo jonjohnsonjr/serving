@@ -776,11 +776,11 @@ func TestGlobalResyncOnConfigMapUpdate(t *testing.T) {
 				t.Fatalf("Failed to start configuration manager: %v", err)
 			}
 
-			grp.Go(func() error { return controller.Run(1, stopCh) })
-
 			revClient.Create(rev)
 
 			watcher.OnChange(&test.configMapToUpdate)
+
+			grp.Go(func() error { return controller.Run(1, stopCh) })
 
 			if err := h.WaitForHooks(time.Second); err != nil {
 				t.Errorf("%s Global Resync Failed: %v", test.name, err)
