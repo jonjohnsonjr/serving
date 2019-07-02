@@ -72,8 +72,9 @@ func (c *Reconciler) reconcileDeployment(ctx context.Context, rev *v1alpha1.Revi
 	}
 
 	if !ds.IsReady() {
-		cond := ds.GetCondition(DeploymentConditionReady)
-		rev.Status.MarkResourcesUnavailable(cond.Reason, cond.Message)
+		if cond := ds.GetCondition(DeploymentConditionReady); cond != nil {
+			rev.Status.MarkResourcesUnavailable(cond.Reason, cond.Message)
+		}
 	}
 
 	return nil
