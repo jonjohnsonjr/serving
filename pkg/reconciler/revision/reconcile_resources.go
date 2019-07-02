@@ -65,46 +65,15 @@ func (c *Reconciler) reconcileDeployment(ctx context.Context, rev *v1alpha1.Revi
 		}
 	}
 
-	// If a container keeps crashing (no active pods in the deployment although we want some)
-	if *deployment.Spec.Replicas > 0 && deployment.Status.AvailableReplicas == 0 {
-		pods, err := c.KubeClientSet.CoreV1().Pods(ns).List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(deployment.Spec.Selector)})
-		if err != nil {
-			logger.Errorf("Error getting pods: %v", err)
-		} else if len(pods.Items) > 0 {
-			// Arbitrarily grab the very first pod, as they all should be crashing
-			pod := pods.Items[0]
-
-			// Update the revision status if pod cannot be scheduled(possibly resource constraints)
-			// If pod cannot be scheduled then we expect the container status to be empty.
-			for _, cond := range pod.Status.Conditions {
-				if cond.Type == corev1.PodScheduled && cond.Status == corev1.ConditionFalse {
-					rev.Status.MarkResourcesUnavailable(cond.Reason, cond.Message)
-					break
-				}
-			}
-
-			for _, status := range pod.Status.ContainerStatuses {
-				if status.Name == rev.Spec.GetContainer().Name {
-					if t := status.LastTerminationState.Terminated; t != nil {
-						logger.Infof("%s marking exiting with: %d/%s", rev.Name, t.ExitCode, t.Message)
-						rev.Status.MarkContainerExiting(t.ExitCode, t.Message)
-					} else if w := status.State.Waiting; w != nil && hasDeploymentTimedOut(deployment) {
-						logger.Infof("%s marking resources unavailable with: %s: %s", rev.Name, w.Reason, w.Message)
-						rev.Status.MarkResourcesUnavailable(w.Reason, w.Message)
-					}
-					break
-				}
-			}
-		}
+	ds, err := DiagnoseDeployment(deployment, c.KubeClientSet, rev.Spec.GetContainer().Name)
+	if err != nil {
+		logger.Errorf("Error diagnosing deployment %q: %v", deploymentName, err)
+		return err
 	}
 
-	// Now that we have a Deployment, determine whether there is any relevant
-	// status to surface in the Revision.
-	if hasDeploymentTimedOut(deployment) && !rev.Status.IsActivationRequired() {
-		rev.Status.MarkProgressDeadlineExceeded(fmt.Sprintf(
-			"Unable to create pods for more than %d seconds.", resources.ProgressDeadlineSeconds))
-		c.Recorder.Eventf(rev, corev1.EventTypeNormal, "ProgressDeadlineExceeded",
-			"Revision %s not ready due to Deployment timeout", rev.Name)
+	if !ds.IsReady() {
+		cond := ds.GetCondition(DeploymentConditionReady)
+		rev.Status.MarkResourcesUnavailable(cond.Reason, cond.Message)
 	}
 
 	return nil

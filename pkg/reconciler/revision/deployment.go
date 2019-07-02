@@ -118,7 +118,7 @@ func DiagnoseDeployment(deployment *appsv1.Deployment, kubeclient kubernetes.Int
 		} else if len(pods.Items) > 0 {
 			// Arbitrarily grab the very first pod, as they all should be crashing
 			pod := pods.Items[0]
-			ps := diagnosePod(&pod, container)
+			ps := DiagnosePod(&pod, container)
 			ds.PropagatePodStatus(ps)
 		}
 	}
