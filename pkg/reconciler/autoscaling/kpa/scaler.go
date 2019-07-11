@@ -26,6 +26,7 @@ import (
 
 	"knative.dev/pkg/apis/duck"
 	"knative.dev/pkg/injection/clients/dynamicclient"
+	"knative.dev/pkg/injection/clients/kubeclient"
 	"knative.dev/pkg/logging"
 
 	"knative.dev/serving/pkg/activator"
@@ -42,6 +43,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -78,6 +80,7 @@ type asyncProber interface {
 type scaler struct {
 	psInformerFactory duck.InformerFactory
 	dynamicClient     dynamic.Interface
+	kubeClient        kubernetes.Interface
 	logger            *zap.SugaredLogger
 	transport         http.RoundTripper
 	transportFactory  prober.TransportFactory
@@ -101,6 +104,7 @@ func newScaler(ctx context.Context, psInformerFactory duck.InformerFactory, enqu
 		// informer/lister each time.
 		psInformerFactory: psInformerFactory,
 		dynamicClient:     dynamicclient.Get(ctx),
+		kubeClient:        kubeclient.Get(ctx),
 		logger:            logger,
 		transport:         transport,
 		transportFactory: func() http.RoundTripper {
@@ -145,6 +149,50 @@ func applyBounds(min, max, x int32) int32 {
 		return max
 	}
 	return x
+}
+
+func (ks *scaler) diagnoseActivationFailure(pa *pav1alpha1.PodAutoscaler) error {
+	ps, err := resources.GetScaleResource(pa.Namespace, pa.Spec.ScaleTargetRef, ks.psInformerFactory)
+	if err != nil {
+		ks.logger.Errorf("Error getting PodScalable: %v", err)
+		return err
+	}
+
+	pods, err := ks.kubeClient.CoreV1().Pods(pa.Namespace).List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(ps.Spec.Selector)})
+	if err != nil {
+		ks.logger.Errorf("Error getting pods: %v", err)
+		return err
+	}
+
+	if len(pods.Items) > 0 {
+		// Arbitrarily grab the very first pod, as they all should be crashing
+		pod := pods.Items[0]
+
+		// Update the revision status if pod cannot be scheduled (possibly resource constraints)
+		// If pod cannot be scheduled then we expect the container status to be empty.
+		for _, cond := range pod.Status.Conditions {
+			if cond.Type == corev1.PodScheduled && cond.Status == corev1.ConditionFalse {
+				// rev.Status.MarkResourcesUnavailable(cond.Reason, cond.Message)
+				break
+			}
+		}
+
+		containerName := ps.Spec.Template.Spec.Containers[0].Name
+
+		for _, status := range pod.Status.ContainerStatuses {
+			if status.Name == containerName {
+				if t := status.LastTerminationState.Terminated; t != nil {
+					ks.logger.Infof("%s marking exiting with: %d/%s", pa.Name, t.ExitCode, t.Message)
+					// rev.Status.MarkContainerExiting(t.ExitCode, t.Message)
+				} else if w := status.State.Waiting; w != nil && hasDeploymentTimedOut(deployment) {
+					logger.Infof("%s marking resources unavailable with: %s: %s", pa.Name, w.Reason, w.Message)
+					// rev.Status.MarkResourcesUnavailable(w.Reason, w.Message)
+				}
+				break
+			}
+		}
+	}
+	return nil
 }
 
 func (ks *scaler) handleScaleToZero(pa *pav1alpha1.PodAutoscaler, desiredScale int32, config *autoscaler.Config) (int32, bool) {
