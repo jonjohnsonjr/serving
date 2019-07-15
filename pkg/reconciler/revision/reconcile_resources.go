@@ -143,7 +143,7 @@ func (c *Reconciler) reconcilePA(ctx context.Context, rev *v1alpha1.Revision) er
 	rev.Status.ServiceName = pa.Status.ServiceName
 
 	// Reflect the PA status in our own.
-	cond := pa.Status.GetCondition(av1alpha1.PodAutoscalerConditionReady)
+	cond := pa.Status.GetCondition(av1alpha1.PodAutoscalerConditionActive)
 	switch {
 	case cond == nil:
 		rev.Status.MarkActivating("Deploying", "")

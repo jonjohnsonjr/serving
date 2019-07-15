@@ -361,7 +361,7 @@ func TestReconcile(t *testing.T) {
 			InduceFailure("create", "horizontalpodautoscalers"),
 		},
 		WantStatusUpdates: []ktesting.UpdateActionImpl{{
-			Object: pa(testRevision, testNamespace, WithHPAClass, WithNoTraffic(
+			Object: pa(testRevision, testNamespace, WithHPAClass, WithPAFailed(
 				"FailedCreate", "Failed to create HorizontalPodAutoscaler \"test-revision\".")),
 		}},
 		WantErr: true,
@@ -418,6 +418,7 @@ func pa(name, namespace string, options ...PodAutoscalerOption) *autoscalingv1al
 			ProtocolType: networking.ProtocolHTTP1,
 		},
 	}
+	pa.Status.InitializeConditions()
 	for _, opt := range options {
 		opt(pa)
 	}

@@ -84,6 +84,13 @@ func WithNoTraffic(reason, message string) PodAutoscalerOption {
 	}
 }
 
+// WithPAFailed updates the PA to reflect the fact that it is not ready.
+func WithPAFailed(reason, message string) PodAutoscalerOption {
+	return func(pa *autoscalingv1alpha1.PodAutoscaler) {
+		pa.Status.MarkFailed(reason, message)
+	}
+}
+
 // WithNoTraffic updates the PA to reflect the fact that it is not
 // receiving traffic.
 func WithPodFailure(reason, message string) PodAutoscalerOption {

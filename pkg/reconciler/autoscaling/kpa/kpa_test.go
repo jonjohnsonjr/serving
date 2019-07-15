@@ -141,7 +141,9 @@ func sks(ns, n string, so ...SKSOption) *nv1a1.ServerlessService {
 }
 
 func markOld(pa *asv1a1.PodAutoscaler) {
-	pa.Status.Conditions[0].LastTransitionTime.Inner.Time = time.Now().Add(-1 * time.Hour)
+	for i := range pa.Status.Conditions {
+		pa.Status.Conditions[i].LastTransitionTime.Inner.Time = time.Now().Add(-1 * time.Hour)
+	}
 }
 
 func withSvcSelector(sel map[string]string) K8sServiceOption {
@@ -167,6 +169,7 @@ func withMSvcStatus(s string) PodAutoscalerOption {
 func kpa(ns, n string, opts ...PodAutoscalerOption) *asv1a1.PodAutoscaler {
 	rev := newTestRevision(ns, n)
 	kpa := revisionresources.MakePA(rev)
+	kpa.Status.InitializeConditions()
 	kpa.Annotations["autoscaling.knative.dev/class"] = "kpa.autoscaling.knative.dev"
 	kpa.Annotations["autoscaling.knative.dev/metric"] = "concurrency"
 	for _, opt := range opts {
@@ -403,6 +406,38 @@ func TestReconcileAndScaleToZero(t *testing.T) {
 			Object: kpa(testNamespace, testRevision,
 				WithNoTraffic("TimedOut", "The target could not be activated."),
 				WithPAStatusService(testRevision), withMSvcStatus("once-you're-gone")),
+		}},
+		WantUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: sks(testNamespace, testRevision, WithSKSReady,
+				WithDeployRef(deployName), WithProxyMode),
+		}},
+		WantPatches: []clientgotesting.PatchActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: testNamespace,
+			},
+			Name:  deployName,
+			Patch: []byte(`[{"op":"add","path":"/spec/replicas","value":0}]`),
+		}},
+	}, {
+		Name: "surface ImagePullBackoff",
+		Key:  key,
+		// Test the propagation of ImagePullBackoff from user container.
+		Objects: []runtime.Object{
+			kpa(testNamespace, testRevision, markActivating, markOld,
+				WithPAStatusService(testRevision),
+				withMSvcStatus("todo")),
+			sks(testNamespace, testRevision, WithDeployRef(deployName), WithSKSReady),
+			metricsSvc(testNamespace, testRevision, withSvcSelector(usualSelector),
+				withMSvcName("todo")),
+			deploy(testNamespace, testRevision),
+			makeSKSPrivateEndpoints(1, testNamespace, testRevision),
+			pod(testNamespace, "todo", WithWaitingContainer("user-container", "ImagePullBackoff", "can't pull it")),
+		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: kpa(testNamespace, testRevision,
+				WithNoTraffic("TimedOut", "The target could not be activated."),
+				WithPodFailure("ImagePullBackoff", "can't pull it"),
+				WithPAStatusService(testRevision), withMSvcStatus("todo")),
 		}},
 		WantUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: sks(testNamespace, testRevision, WithSKSReady,
@@ -934,6 +969,13 @@ func deploy(namespace, name string, opts ...deploymentOption) *appsv1.Deployment
 					"a": "b",
 				},
 			},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{
+						Name: "user-container",
+					}},
+				},
+			},
 		},
 		Status: appsv1.DeploymentStatus{
 			Replicas: 42,
@@ -1347,78 +1389,78 @@ func TestScaleFailure(t *testing.T) {
 	}
 }
 
-func TestPodFailures(t *testing.T) {
-	table := TableTest{{
-		Name: "surface ImagePullBackoff",
-		Key:  key,
-		// Test the propagation of ImagePullBackoff from user container.
-		Objects: []runtime.Object{
-			kpa(testNamespace, testRevision, markActivating, markOld,
-				WithPAStatusService(testRevision),
-				withMSvcStatus("todo")),
-			sks(testNamespace, testRevision, WithDeployRef(deployName), WithSKSReady),
-			metricsSvc(testNamespace, testRevision, withSvcSelector(usualSelector),
-				withMSvcName("todo")),
-			deploy(testNamespace, testRevision),
-			makeSKSPrivateEndpoints(1, testNamespace, testRevision),
-			pod(testNamespace, "todo", WithWaitingContainer("user-container", "ImagePullBackoff", "can't pull it")),
-		},
-		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: kpa(testNamespace, testRevision,
-				WithNoTraffic("TimedOut", "The target could not be activated."),
-				WithPodFailure("ImagePullBackoff", "can't pull it"),
-				WithPAStatusService(testRevision), withMSvcStatus("todo")),
-		}},
-		WantUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: sks(testNamespace, testRevision, WithSKSReady,
-				WithDeployRef(deployName), WithProxyMode),
-		}},
-		WantPatches: []clientgotesting.PatchActionImpl{{
-			ActionImpl: clientgotesting.ActionImpl{
-				Namespace: testNamespace,
-			},
-			Name:  deployName,
-			Patch: []byte(`[{"op":"add","path":"/spec/replicas","value":0}]`),
-		}},
-	}, {
-		Name: "surface pod errors",
-		Key:  key,
-		// Test the propagation of the termination state of a Pod into the revision.
-		// This initializes the world to the stable state after its first reconcile,
-		// but changes the user deployment to have a failing pod. It then verifies
-		// that Reconcile propagates this into the status of the Revision.
-		Objects: []runtime.Object{
-			rev("foo", "pod-error",
-				withK8sServiceName("a-pod-error"), WithLogURL, AllUnknownConditions, MarkActive),
-			pa("foo", "pod-error"), // PA can't be ready, since no traffic.
-			pod("foo", "pod-error", WithFailingContainer("user-container", 5, "I failed man!")),
-			deploy("foo", "pod-error"),
-			image("foo", "pod-error"),
-		},
-		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: rev("foo", "pod-error",
-				WithLogURL, AllUnknownConditions, MarkContainerExiting(5, "I failed man!")),
-		}},
-	}, {
-		Name: "surface pod schedule errors",
-		Key:  key,
-		// Test the propagation of the scheduling errors of Pod into the revision.
-		// This initializes the world to unschedule pod. It then verifies
-		// that Reconcile propagates this into the status of the Revision.
-		Objects: []runtime.Object{
-			rev("foo", "pod-schedule-error",
-				withK8sServiceName("a-pod-schedule-error"), WithLogURL, AllUnknownConditions, MarkActive),
-			pa("foo", "pod-schedule-error"), // PA can't be ready, since no traffic.
-			pod("foo", "pod-schedule-error", WithUnschedulableContainer("Insufficient energy", "Unschedulable")),
-			deploy("foo", "pod-schedule-error"),
-			image("foo", "pod-schedule-error"),
-		},
-		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: rev("foo", "pod-schedule-error",
-				WithLogURL, AllUnknownConditions, MarkResourcesUnavailable("Insufficient energy", "Unschedulable")),
-		}},
-	}}
-}
+// func TestPodFailures(t *testing.T) {
+// 	table := TableTest{{
+// 		Name: "surface ImagePullBackoff",
+// 		Key:  key,
+// 		// Test the propagation of ImagePullBackoff from user container.
+// 		Objects: []runtime.Object{
+// 			kpa(testNamespace, testRevision, markActivating, markOld,
+// 				WithPAStatusService(testRevision),
+// 				withMSvcStatus("todo")),
+// 			sks(testNamespace, testRevision, WithDeployRef(deployName), WithSKSReady),
+// 			metricsSvc(testNamespace, testRevision, withSvcSelector(usualSelector),
+// 				withMSvcName("todo")),
+// 			deploy(testNamespace, testRevision),
+// 			makeSKSPrivateEndpoints(1, testNamespace, testRevision),
+// 			pod(testNamespace, "todo", WithWaitingContainer("user-container", "ImagePullBackoff", "can't pull it")),
+// 		},
+// 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+// 			Object: kpa(testNamespace, testRevision,
+// 				WithNoTraffic("TimedOut", "The target could not be activated."),
+// 				WithPodFailure("ImagePullBackoff", "can't pull it"),
+// 				WithPAStatusService(testRevision), withMSvcStatus("todo")),
+// 		}},
+// 		WantUpdates: []clientgotesting.UpdateActionImpl{{
+// 			Object: sks(testNamespace, testRevision, WithSKSReady,
+// 				WithDeployRef(deployName), WithProxyMode),
+// 		}},
+// 		WantPatches: []clientgotesting.PatchActionImpl{{
+// 			ActionImpl: clientgotesting.ActionImpl{
+// 				Namespace: testNamespace,
+// 			},
+// 			Name:  deployName,
+// 			Patch: []byte(`[{"op":"add","path":"/spec/replicas","value":0}]`),
+// 		}},
+// 	}, {
+// 		Name: "surface pod errors",
+// 		Key:  key,
+// 		// Test the propagation of the termination state of a Pod into the revision.
+// 		// This initializes the world to the stable state after its first reconcile,
+// 		// but changes the user deployment to have a failing pod. It then verifies
+// 		// that Reconcile propagates this into the status of the Revision.
+// 		Objects: []runtime.Object{
+// 			rev("foo", "pod-error",
+// 				withK8sServiceName("a-pod-error"), WithLogURL, AllUnknownConditions, MarkActive),
+// 			pa("foo", "pod-error"), // PA can't be ready, since no traffic.
+// 			pod("foo", "pod-error", WithFailingContainer("user-container", 5, "I failed man!")),
+// 			deploy("foo", "pod-error"),
+// 			image("foo", "pod-error"),
+// 		},
+// 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+// 			Object: rev("foo", "pod-error",
+// 				WithLogURL, AllUnknownConditions, MarkContainerExiting(5, "I failed man!")),
+// 		}},
+// 	}, {
+// 		Name: "surface pod schedule errors",
+// 		Key:  key,
+// 		// Test the propagation of the scheduling errors of Pod into the revision.
+// 		// This initializes the world to unschedule pod. It then verifies
+// 		// that Reconcile propagates this into the status of the Revision.
+// 		Objects: []runtime.Object{
+// 			rev("foo", "pod-schedule-error",
+// 				withK8sServiceName("a-pod-schedule-error"), WithLogURL, AllUnknownConditions, MarkActive),
+// 			pa("foo", "pod-schedule-error"), // PA can't be ready, since no traffic.
+// 			pod("foo", "pod-schedule-error", WithUnschedulableContainer("Insufficient energy", "Unschedulable")),
+// 			deploy("foo", "pod-schedule-error"),
+// 			image("foo", "pod-schedule-error"),
+// 		},
+// 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+// 			Object: rev("foo", "pod-schedule-error",
+// 				WithLogURL, AllUnknownConditions, MarkResourcesUnavailable("Insufficient energy", "Unschedulable")),
+// 		}},
+// 	}}
+// }
 
 func pollDeciders(deciders *testDeciders, namespace, name string, cond func(*autoscaler.Decider) bool) (decider *autoscaler.Decider, err error) {
 	wait.PollImmediate(10*time.Millisecond, 3*time.Second, func() (bool, error) {

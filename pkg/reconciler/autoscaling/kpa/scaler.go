@@ -19,7 +19,6 @@ package kpa
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -240,8 +239,6 @@ func (ks *scaler) diagnoseActivationFailure(ctx context.Context, pa *pav1alpha1.
 
 	containerName := ps.Spec.Template.Spec.Containers[0].Name
 
-	log.Fatal("got here")
-
 	for _, pod := range pods.Items {
 		// Update the revision status if pod cannot be scheduled (possibly resource constraints)
 		// If pod cannot be scheduled then we expect the container status to be empty.
@@ -259,7 +256,7 @@ func (ks *scaler) diagnoseActivationFailure(ctx context.Context, pa *pav1alpha1.
 					logger.Infof("%s marking exiting with: %d/%s", pa.Name, t.ExitCode, t.Message)
 					pa.Status.MarkContainerExiting(t.ExitCode, t.Message)
 				} else if w := status.State.Waiting; w != nil {
-					logger.Infof("%s marking resources unavailable with: %s: %s", pa.Name, w.Reason, w.Message)
+					logger.Infof("%s marking pods failed with: %s: %s", pa.Name, w.Reason, w.Message)
 					pa.Status.MarkPodsFailed(w.Reason, w.Message)
 				}
 				break

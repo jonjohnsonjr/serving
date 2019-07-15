@@ -165,6 +165,12 @@ func (pas *PodAutoscalerStatus) InitializeConditions() {
 	podCondSet.Manage(pas.duck()).InitializeConditions()
 }
 
+// MarkInactive marks the PA as inactive.
+func (pas *PodAutoscalerStatus) MarkFailed(reason, message string) {
+	podCondSet.Manage(pas.duck()).MarkFalse(PodAutoscalerConditionReady, reason, message)
+	podCondSet.Manage(pas.duck()).MarkFalse(PodAutoscalerConditionActive, reason, message)
+}
+
 // MarkActive marks the PA active.
 func (pas *PodAutoscalerStatus) MarkActive() {
 	podCondSet.Manage(pas.duck()).MarkTrue(PodAutoscalerConditionActive)
@@ -203,14 +209,14 @@ func (pas *PodAutoscalerStatus) MarkContainerExiting(exitCode int32, message str
 // MarkResourceNotOwned changes the "Active" condition to false to reflect that the
 // resource of the given kind and name has already been created, and we do not own it.
 func (pas *PodAutoscalerStatus) MarkResourceNotOwned(kind, name string) {
-	pas.MarkInactive("NotOwned",
+	pas.MarkFailed("NotOwned",
 		fmt.Sprintf("There is an existing %s %q that we do not own.", kind, name))
 }
 
 // MarkResourceFailedCreation changes the "Active" condition to false to reflect that a
 // critical resource of the given kind and name was unable to be created.
 func (pas *PodAutoscalerStatus) MarkResourceFailedCreation(kind, name string) {
-	pas.MarkInactive("FailedCreate",
+	pas.MarkFailed("FailedCreate",
 		fmt.Sprintf("Failed to create %s %q.", kind, name))
 }
 
