@@ -31,7 +31,7 @@ import (
 )
 
 var podCondSet = apis.NewLivingConditionSet(
-	PodAutoscalerConditionActive,
+	PodAutoscalerConditionPodsReady,
 )
 
 func (pa *PodAutoscaler) GetGroupVersionKind() schema.GroupVersionKind {
@@ -180,6 +180,26 @@ func (pas *PodAutoscalerStatus) MarkInactive(reason, message string) {
 	podCondSet.Manage(pas.duck()).MarkFalse(PodAutoscalerConditionActive, reason, message)
 }
 
+// MarkPodsReady marks the pods as Ready.
+func (pas *PodAutoscalerStatus) MarkPodsReady() {
+	podCondSet.Manage(pas.duck()).MarkTrue(PodAutoscalerConditionPodsReady)
+}
+
+// MarkPodsUnknown marks the pods as Unknown.
+func (pas *PodAutoscalerStatus) MarkPodsUnknown(reason, message string) {
+	podCondSet.Manage(pas.duck()).MarkUnknown(PodAutoscalerConditionPodsReady, reason, message)
+}
+
+// MarkPodsFailed marks the pods as Ready.
+func (pas *PodAutoscalerStatus) MarkPodsFailed(reason, message string) {
+	podCondSet.Manage(pas.duck()).MarkFalse(PodAutoscalerConditionPodsReady, reason, message)
+}
+
+func (pas *PodAutoscalerStatus) MarkContainerExiting(exitCode int32, message string) {
+	exitCodeString := fmt.Sprintf("ExitCode%d", exitCode)
+	podCondSet.Manage(pas.duck()).MarkFalse(PodAutoscalerConditionPodsReady, exitCodeString, ContainerExitingMessage(message))
+}
+
 // MarkResourceNotOwned changes the "Active" condition to false to reflect that the
 // resource of the given kind and name has already been created, and we do not own it.
 func (pas *PodAutoscalerStatus) MarkResourceNotOwned(kind, name string) {
@@ -222,4 +242,9 @@ func (pas *PodAutoscalerStatus) inStatusFor(status corev1.ConditionStatus, dur t
 
 func (pas *PodAutoscalerStatus) duck() *duckv1beta1.Status {
 	return (*duckv1beta1.Status)(&pas.Status)
+}
+
+// ContainerExitingMessage constructs the status message if a container fails to come up.
+func ContainerExitingMessage(message string) string {
+	return fmt.Sprintf("Container failed with: %s", message)
 }

@@ -19,6 +19,7 @@ package kpa
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -40,6 +41,7 @@ import (
 	rresources "knative.dev/serving/pkg/reconciler/revision/resources"
 	"knative.dev/serving/pkg/resources"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
@@ -151,50 +153,6 @@ func applyBounds(min, max, x int32) int32 {
 	return x
 }
 
-func (ks *scaler) diagnoseActivationFailure(pa *pav1alpha1.PodAutoscaler) error {
-	ps, err := resources.GetScaleResource(pa.Namespace, pa.Spec.ScaleTargetRef, ks.psInformerFactory)
-	if err != nil {
-		ks.logger.Errorf("Error getting PodScalable: %v", err)
-		return err
-	}
-
-	pods, err := ks.kubeClient.CoreV1().Pods(pa.Namespace).List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(ps.Spec.Selector)})
-	if err != nil {
-		ks.logger.Errorf("Error getting pods: %v", err)
-		return err
-	}
-
-	if len(pods.Items) > 0 {
-		// Arbitrarily grab the very first pod, as they all should be crashing
-		pod := pods.Items[0]
-
-		// Update the revision status if pod cannot be scheduled (possibly resource constraints)
-		// If pod cannot be scheduled then we expect the container status to be empty.
-		for _, cond := range pod.Status.Conditions {
-			if cond.Type == corev1.PodScheduled && cond.Status == corev1.ConditionFalse {
-				// rev.Status.MarkResourcesUnavailable(cond.Reason, cond.Message)
-				break
-			}
-		}
-
-		containerName := ps.Spec.Template.Spec.Containers[0].Name
-
-		for _, status := range pod.Status.ContainerStatuses {
-			if status.Name == containerName {
-				if t := status.LastTerminationState.Terminated; t != nil {
-					ks.logger.Infof("%s marking exiting with: %d/%s", pa.Name, t.ExitCode, t.Message)
-					// rev.Status.MarkContainerExiting(t.ExitCode, t.Message)
-				} else if w := status.State.Waiting; w != nil && hasDeploymentTimedOut(deployment) {
-					logger.Infof("%s marking resources unavailable with: %s: %s", pa.Name, w.Reason, w.Message)
-					// rev.Status.MarkResourcesUnavailable(w.Reason, w.Message)
-				}
-				break
-			}
-		}
-	}
-	return nil
-}
-
 func (ks *scaler) handleScaleToZero(pa *pav1alpha1.PodAutoscaler, desiredScale int32, config *autoscaler.Config) (int32, bool) {
 	if desiredScale != 0 {
 		return desiredScale, true
@@ -210,12 +168,11 @@ func (ks *scaler) handleScaleToZero(pa *pav1alpha1.PodAutoscaler, desiredScale i
 	}
 
 	if pa.Status.IsActivating() { // Active=Unknown
-		// If we are stuck activating for longer than our progress deadline, presume we cannot succeed and scale to 0.
 		if pa.Status.CanFailActivation(activationTimeout) {
+			// If we are stuck activating for longer than our progress deadline, presume we cannot succeed and scale to 0.
 			ks.logger.Infof("%s activation has timed out after %v.", pa.Name, activationTimeout)
-			return 0, true
+			return desiredScale, true
 		}
-		ks.enqueueCB(pa, activationTimeout)
 		return scaleUnknown, false
 	} else if pa.Status.IsReady() { // Active=True
 		// Don't scale-to-zero if the PA is active
@@ -254,6 +211,63 @@ func (ks *scaler) handleScaleToZero(pa *pav1alpha1.PodAutoscaler, desiredScale i
 	}
 
 	return desiredScale, true
+}
+
+func (ks *scaler) handleActivationFailure(ctx context.Context, pa *pav1alpha1.PodAutoscaler, ps *pav1alpha1.PodScalable, desiredScale int32) (int32, error) {
+	if !pa.Status.IsActivating() {
+		return desiredScale, nil
+	}
+
+	if !pa.Status.CanFailActivation(activationTimeout) {
+		ks.enqueueCB(pa, activationTimeout)
+		return desiredScale, nil
+	}
+
+	return 0, ks.diagnoseActivationFailure(ctx, pa, ps)
+}
+
+func (ks *scaler) diagnoseActivationFailure(ctx context.Context, pa *pav1alpha1.PodAutoscaler, ps *pav1alpha1.PodScalable) error {
+	logger := logging.FromContext(ctx)
+
+	pods, err := ks.kubeClient.CoreV1().Pods(pa.Namespace).List(metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(ps.Spec.Selector)})
+	if err != nil {
+		return err
+	}
+
+	if len(ps.Spec.Template.Spec.Containers) == 0 {
+		return nil
+	}
+
+	containerName := ps.Spec.Template.Spec.Containers[0].Name
+
+	log.Fatal("got here")
+
+	for _, pod := range pods.Items {
+		// Update the revision status if pod cannot be scheduled (possibly resource constraints)
+		// If pod cannot be scheduled then we expect the container status to be empty.
+		for _, cond := range pod.Status.Conditions {
+			if cond.Type == corev1.PodScheduled && cond.Status == corev1.ConditionFalse {
+				logger.Infof("%s marking pod unscheduled with: %s: %s", pa.Name, cond.Reason, cond.Message)
+				pa.Status.MarkPodsFailed(cond.Reason, cond.Message)
+				break
+			}
+		}
+
+		for _, status := range pod.Status.ContainerStatuses {
+			if status.Name == containerName {
+				if t := status.LastTerminationState.Terminated; t != nil {
+					logger.Infof("%s marking exiting with: %d/%s", pa.Name, t.ExitCode, t.Message)
+					pa.Status.MarkContainerExiting(t.ExitCode, t.Message)
+				} else if w := status.State.Waiting; w != nil {
+					logger.Infof("%s marking resources unavailable with: %s: %s", pa.Name, w.Reason, w.Message)
+					pa.Status.MarkPodsFailed(w.Reason, w.Message)
+				}
+				break
+			}
+		}
+	}
+
+	return nil
 }
 
 func (ks *scaler) applyScale(ctx context.Context, pa *pav1alpha1.PodAutoscaler, desiredScale int32,
@@ -302,15 +316,22 @@ func (ks *scaler) Scale(ctx context.Context, pa *pav1alpha1.PodAutoscaler, desir
 		desiredScale = newScale
 	}
 
-	desiredScale, shouldApplyScale := ks.handleScaleToZero(pa, desiredScale, config.FromContext(ctx).Autoscaler)
-	if !shouldApplyScale {
-		return desiredScale, nil
-	}
-
 	ps, err := resources.GetScaleResource(pa.Namespace, pa.Spec.ScaleTargetRef, ks.psInformerFactory)
 	if err != nil {
 		logger.Errorw(fmt.Sprintf("Resource %q not found", pa.Name), zap.Error(err))
 		return desiredScale, err
+	}
+
+	// Diagnose pod issues and set desiredScale to zero if we fail to activate.
+	desiredScale, err = ks.handleActivationFailure(ctx, pa, ps, desiredScale)
+	if err != nil {
+		logger.Errorw("Handling activation failures", zap.Error(err))
+		return desiredScale, err
+	}
+
+	desiredScale, shouldApplyScale := ks.handleScaleToZero(pa, desiredScale, config.FromContext(ctx).Autoscaler)
+	if !shouldApplyScale {
+		return desiredScale, nil
 	}
 
 	currentScale := int32(1)

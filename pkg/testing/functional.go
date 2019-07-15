@@ -84,6 +84,14 @@ func WithNoTraffic(reason, message string) PodAutoscalerOption {
 	}
 }
 
+// WithNoTraffic updates the PA to reflect the fact that it is not
+// receiving traffic.
+func WithPodFailure(reason, message string) PodAutoscalerOption {
+	return func(pa *autoscalingv1alpha1.PodAutoscaler) {
+		pa.Status.MarkPodsFailed(reason, message)
+	}
+}
+
 // WithPADeletionTimestamp will set the DeletionTimestamp on the PodAutoscaler.
 func WithPADeletionTimestamp(r *autoscalingv1alpha1.PodAutoscaler) {
 	t := metav1.NewTime(time.Unix(1e9, 0))

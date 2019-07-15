@@ -945,6 +945,23 @@ func deploy(namespace, name string, opts ...deploymentOption) *appsv1.Deployment
 	return s
 }
 
+func pod(namespace, name string, po ...PodOption) *corev1.Pod {
+	deploy := deploy(namespace, name)
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      name,
+			Labels:    deploy.Spec.Selector.MatchLabels,
+		},
+	}
+
+	for _, opt := range po {
+		opt(pod)
+	}
+	return pod
+}
+
 func TestGlobalResyncOnUpdateAutoscalerConfigMap(t *testing.T) {
 	defer logtesting.ClearAll()
 	ctx, informers := SetupFakeContext(t)
@@ -1328,6 +1345,79 @@ func TestScaleFailure(t *testing.T) {
 	if err := ctl.Reconciler.Reconcile(context.Background(), testNamespace+"/"+testRevision); err == nil {
 		t.Error("Reconcile() = nil, wanted error")
 	}
+}
+
+func TestPodFailures(t *testing.T) {
+	table := TableTest{{
+		Name: "surface ImagePullBackoff",
+		Key:  key,
+		// Test the propagation of ImagePullBackoff from user container.
+		Objects: []runtime.Object{
+			kpa(testNamespace, testRevision, markActivating, markOld,
+				WithPAStatusService(testRevision),
+				withMSvcStatus("todo")),
+			sks(testNamespace, testRevision, WithDeployRef(deployName), WithSKSReady),
+			metricsSvc(testNamespace, testRevision, withSvcSelector(usualSelector),
+				withMSvcName("todo")),
+			deploy(testNamespace, testRevision),
+			makeSKSPrivateEndpoints(1, testNamespace, testRevision),
+			pod(testNamespace, "todo", WithWaitingContainer("user-container", "ImagePullBackoff", "can't pull it")),
+		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: kpa(testNamespace, testRevision,
+				WithNoTraffic("TimedOut", "The target could not be activated."),
+				WithPodFailure("ImagePullBackoff", "can't pull it"),
+				WithPAStatusService(testRevision), withMSvcStatus("todo")),
+		}},
+		WantUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: sks(testNamespace, testRevision, WithSKSReady,
+				WithDeployRef(deployName), WithProxyMode),
+		}},
+		WantPatches: []clientgotesting.PatchActionImpl{{
+			ActionImpl: clientgotesting.ActionImpl{
+				Namespace: testNamespace,
+			},
+			Name:  deployName,
+			Patch: []byte(`[{"op":"add","path":"/spec/replicas","value":0}]`),
+		}},
+	}, {
+		Name: "surface pod errors",
+		Key:  key,
+		// Test the propagation of the termination state of a Pod into the revision.
+		// This initializes the world to the stable state after its first reconcile,
+		// but changes the user deployment to have a failing pod. It then verifies
+		// that Reconcile propagates this into the status of the Revision.
+		Objects: []runtime.Object{
+			rev("foo", "pod-error",
+				withK8sServiceName("a-pod-error"), WithLogURL, AllUnknownConditions, MarkActive),
+			pa("foo", "pod-error"), // PA can't be ready, since no traffic.
+			pod("foo", "pod-error", WithFailingContainer("user-container", 5, "I failed man!")),
+			deploy("foo", "pod-error"),
+			image("foo", "pod-error"),
+		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: rev("foo", "pod-error",
+				WithLogURL, AllUnknownConditions, MarkContainerExiting(5, "I failed man!")),
+		}},
+	}, {
+		Name: "surface pod schedule errors",
+		Key:  key,
+		// Test the propagation of the scheduling errors of Pod into the revision.
+		// This initializes the world to unschedule pod. It then verifies
+		// that Reconcile propagates this into the status of the Revision.
+		Objects: []runtime.Object{
+			rev("foo", "pod-schedule-error",
+				withK8sServiceName("a-pod-schedule-error"), WithLogURL, AllUnknownConditions, MarkActive),
+			pa("foo", "pod-schedule-error"), // PA can't be ready, since no traffic.
+			pod("foo", "pod-schedule-error", WithUnschedulableContainer("Insufficient energy", "Unschedulable")),
+			deploy("foo", "pod-schedule-error"),
+			image("foo", "pod-schedule-error"),
+		},
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: rev("foo", "pod-schedule-error",
+				WithLogURL, AllUnknownConditions, MarkResourcesUnavailable("Insufficient energy", "Unschedulable")),
+		}},
+	}}
 }
 
 func pollDeciders(deciders *testDeciders, namespace, name string, cond func(*autoscaler.Decider) bool) (decider *autoscaler.Decider, err error) {

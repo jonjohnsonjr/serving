@@ -228,6 +228,7 @@ func TestScaler(t *testing.T) {
 		scaleTo:       10,
 		wantReplicas:  10,
 		wantScaling:   true,
+		wantCBCount:   1,
 	}, {
 		label:         "scales up to maxScale",
 		startReplicas: 1,
@@ -235,6 +236,7 @@ func TestScaler(t *testing.T) {
 		maxScale:      8,
 		wantReplicas:  8,
 		wantScaling:   true,
+		wantCBCount:   1,
 	}, {
 		label:         "scale up inactive revision",
 		startReplicas: 1,
@@ -259,12 +261,14 @@ func TestScaler(t *testing.T) {
 		scaleTo:       1,
 		wantReplicas:  1,
 		wantScaling:   true,
+		wantCBCount:   1,
 	}, {
 		label:         "scales up from zero to desired high scale",
 		startReplicas: 0,
 		scaleTo:       10,
 		wantReplicas:  10,
 		wantScaling:   true,
+		wantCBCount:   1,
 	}, {
 		label:         "negative scale does not scale",
 		startReplicas: 12,

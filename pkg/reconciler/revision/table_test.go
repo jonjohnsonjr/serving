@@ -411,60 +411,6 @@ func TestReconcile(t *testing.T) {
 		},
 		Key: "foo/deploy-timeout",
 	}, {
-		Name: "surface ImagePullBackoff",
-		// Test the propagation of ImagePullBackoff from user container.
-		Objects: []runtime.Object{
-			rev("foo", "pull-backoff",
-				withK8sServiceName("the-taxman"), WithLogURL, MarkActivating("Deploying", "")),
-			pa("foo", "pull-backoff"), // pa can't be ready since deployment times out.
-			pod("foo", "pull-backoff", WithWaitingContainer("user-container", "ImagePullBackoff", "can't pull it")),
-			timeoutDeploy(deploy("foo", "pull-backoff")),
-			image("foo", "pull-backoff"),
-		},
-		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: rev("foo", "pull-backoff",
-				WithLogURL, AllUnknownConditions,
-				MarkResourcesUnavailable("ImagePullBackoff", "can't pull it")),
-		}},
-		Key: "foo/pull-backoff",
-	}, {
-		Name: "surface pod errors",
-		// Test the propagation of the termination state of a Pod into the revision.
-		// This initializes the world to the stable state after its first reconcile,
-		// but changes the user deployment to have a failing pod. It then verifies
-		// that Reconcile propagates this into the status of the Revision.
-		Objects: []runtime.Object{
-			rev("foo", "pod-error",
-				withK8sServiceName("a-pod-error"), WithLogURL, AllUnknownConditions, MarkActive),
-			pa("foo", "pod-error"), // PA can't be ready, since no traffic.
-			pod("foo", "pod-error", WithFailingContainer("user-container", 5, "I failed man!")),
-			deploy("foo", "pod-error"),
-			image("foo", "pod-error"),
-		},
-		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: rev("foo", "pod-error",
-				WithLogURL, AllUnknownConditions, MarkContainerExiting(5, "I failed man!")),
-		}},
-		Key: "foo/pod-error",
-	}, {
-		Name: "surface pod schedule errors",
-		// Test the propagation of the scheduling errors of Pod into the revision.
-		// This initializes the world to unschedule pod. It then verifies
-		// that Reconcile propagates this into the status of the Revision.
-		Objects: []runtime.Object{
-			rev("foo", "pod-schedule-error",
-				withK8sServiceName("a-pod-schedule-error"), WithLogURL, AllUnknownConditions, MarkActive),
-			pa("foo", "pod-schedule-error"), // PA can't be ready, since no traffic.
-			pod("foo", "pod-schedule-error", WithUnschedulableContainer("Insufficient energy", "Unschedulable")),
-			deploy("foo", "pod-schedule-error"),
-			image("foo", "pod-schedule-error"),
-		},
-		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: rev("foo", "pod-schedule-error",
-				WithLogURL, AllUnknownConditions, MarkResourcesUnavailable("Insufficient energy", "Unschedulable")),
-		}},
-		Key: "foo/pod-schedule-error",
-	}, {
 		Name: "ready steady state",
 		// Test the transition that Reconcile makes when Endpoints become ready on the
 		// SKS owned services, which is signalled by pa having servince name.
@@ -650,23 +596,6 @@ func pa(namespace, name string, ko ...PodAutoscalerOption) *autoscalingv1alpha1.
 		opt(k)
 	}
 	return k
-}
-
-func pod(namespace, name string, po ...PodOption) *corev1.Pod {
-	deploy := deploy(namespace, name)
-
-	pod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
-			Name:      name,
-			Labels:    deploy.Labels,
-		},
-	}
-
-	for _, opt := range po {
-		opt(pod)
-	}
-	return pod
 }
 
 type testConfigStore struct {
