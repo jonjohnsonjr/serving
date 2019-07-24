@@ -24,8 +24,11 @@ import (
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
-var serverlessServiceCondSet = apis.NewLivingConditionSet(
-	ServerlessServiceConditionEndspointsPopulated,
+var sksActivatorCondSet = apis.NewLivingConditionSet(
+	ServerlessServiceConditionActivatorEndpointsPopulated,
+)
+var sksEndpointsCondSet = apis.NewLivingConditionSet(
+	ServerlessServiceConditionEndpointsPopulated,
 )
 
 // GetGroupVersionKind returns the GVK for the ServerlessService.
@@ -35,60 +38,71 @@ func (ss *ServerlessService) GetGroupVersionKind() schema.GroupVersionKind {
 
 // GetCondition returns the value of the condition `t`.
 func (sss *ServerlessServiceStatus) GetCondition(t apis.ConditionType) *apis.Condition {
-	return serverlessServiceCondSet.Manage(sss).GetCondition(t)
+	return sss.condSet().Manage(sss).GetCondition(t)
 }
 
 // InitializeConditions initializes the conditions.
 func (sss *ServerlessServiceStatus) InitializeConditions() {
-	serverlessServiceCondSet.Manage(sss).InitializeConditions()
+	sss.condSet().Manage(sss).InitializeConditions()
 }
 
 // MarkEndpointsReady marks the ServerlessServiceStatus endpoints populated condition to true.
 func (sss *ServerlessServiceStatus) MarkEndpointsReady() {
-	serverlessServiceCondSet.Manage(sss).MarkTrue(ServerlessServiceConditionEndspointsPopulated)
+	sss.condSet().Manage(sss).MarkTrue(ServerlessServiceConditionEndpointsPopulated)
 }
 
 // MarkEndpointsNotOwned marks that we don't own K8s service.
 func (sss *ServerlessServiceStatus) MarkEndpointsNotOwned(kind, name string) {
-	serverlessServiceCondSet.Manage(sss).MarkFalse(
-		ServerlessServiceConditionEndspointsPopulated, "NotOwned",
+	sss.condSet().Manage(sss).MarkFalse(
+		ServerlessServiceConditionEndpointsPopulated, "NotOwned",
 		"Resource %s of type %s is not owned by SKS", name, kind)
 }
 
 // MarkActivatorEndpointsPopulated is setting the ActivatorEndpointsPopulated to True.
 func (sss *ServerlessServiceStatus) MarkActivatorEndpointsPopulated() {
-	serverlessServiceCondSet.Manage(sss).SetCondition(apis.Condition{
-		Type:     ActivatorEndpointsPopulated,
-		Status:   corev1.ConditionTrue,
-		Severity: apis.ConditionSeverityInfo,
-		Reason:   "ActivatorEndpointsPopulated",
-		Message:  "Revision is backed by Activator",
+	sss.condSet().Manage(sss).SetCondition(apis.Condition{
+		Type:    ServerlessServiceConditionActivatorEndpointsPopulated,
+		Status:  corev1.ConditionTrue,
+		Reason:  "ActivatorEndpointsPopulated",
+		Message: "Revision is backed by Activator",
 	})
 }
 
 // MarkActivatorEndpointsRemoved is setting the ActivatorEndpointsPopulated to False.
 func (sss *ServerlessServiceStatus) MarkActivatorEndpointsRemoved() {
-	serverlessServiceCondSet.Manage(sss).SetCondition(apis.Condition{
-		Type:     ActivatorEndpointsPopulated,
-		Status:   corev1.ConditionFalse,
-		Severity: apis.ConditionSeverityInfo,
-		Reason:   "ActivatorEndpointsPopulated",
-		Message:  "Revision is backed by Activator",
+	sss.condSet().Manage(sss).SetCondition(apis.Condition{
+		Type:    ServerlessServiceConditionActivatorEndpointsPopulated,
+		Status:  corev1.ConditionFalse,
+		Reason:  "ActivatorEndpointsPopulated",
+		Message: "Revision is backed by Activator",
 	})
 }
 
 // MarkEndpointsNotReady marks the ServerlessServiceStatus endpoints populated condition to unknown.
 func (sss *ServerlessServiceStatus) MarkEndpointsNotReady(reason string) {
-	serverlessServiceCondSet.Manage(sss).MarkUnknown(
-		ServerlessServiceConditionEndspointsPopulated, reason,
+	sss.condSet().Manage(sss).MarkUnknown(
+		ServerlessServiceConditionEndpointsPopulated, reason,
 		"K8s Service is not ready")
 }
 
 // IsReady returns true if ServerlessService is ready.
 func (sss *ServerlessServiceStatus) IsReady() bool {
-	return serverlessServiceCondSet.Manage(sss).IsHappy()
+	return sss.condSet().Manage(sss).IsHappy()
+}
+
+// EndpointsPopulated returns true when EndpointsPopulated is true.
+func (sss *ServerlessServiceStatus) EndpointsPopulated() bool {
+	cond := sss.GetCondition(ServerlessServiceConditionEndpointsPopulated)
+	return cond != nil && cond.Status == corev1.ConditionTrue
 }
 
 func (sss *ServerlessServiceStatus) duck() *duckv1beta1.Status {
 	return &sss.Status
+}
+
+func (sss *ServerlessServiceStatus) condSet() apis.ConditionSet {
+	if sss.Mode == SKSOperationModeProxy {
+		return sksActivatorCondSet
+	}
+	return sksEndpointsCondSet
 }

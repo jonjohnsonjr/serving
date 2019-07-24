@@ -110,6 +110,7 @@ func (r *reconciler) reconcile(ctx context.Context, sks *netv1alpha1.ServerlessS
 	}
 
 	sks.SetDefaults(ctx)
+	sks.Status.Mode = sks.Spec.Mode
 	sks.Status.InitializeConditions()
 
 	for i, fn := range []func(context.Context, *netv1alpha1.ServerlessService) error{

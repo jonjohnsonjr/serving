@@ -166,7 +166,7 @@ func (c *Reconciler) reconcile(ctx context.Context, pa *pav1alpha1.PodAutoscaler
 
 	// Propagate service name.
 	pa.Status.ServiceName = sks.Status.ServiceName
-	if sks.Status.IsReady() {
+	if sks.Status.EndpointsPopulated() {
 		podCounter := resourceutil.NewScopedEndpointsCounter(c.endpointsLister, pa.Namespace, sks.Status.PrivateServiceName)
 		got, err = podCounter.ReadyCount()
 		if err != nil {

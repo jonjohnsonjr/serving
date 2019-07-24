@@ -52,13 +52,15 @@ func TestGetGroupVersionKind(t *testing.T) {
 }
 
 func TestSSTypicalFlow(t *testing.T) {
-	r := &ServerlessServiceStatus{}
+	r := &ServerlessServiceStatus{
+		Mode: SKSOperationModeServe,
+	}
 	r.InitializeConditions()
 
 	apitest.CheckConditionOngoing(r.duck(), ServerlessServiceConditionReady, t)
 
 	r.MarkEndpointsReady()
-	apitest.CheckConditionSucceeded(r.duck(), ServerlessServiceConditionEndspointsPopulated, t)
+	apitest.CheckConditionSucceeded(r.duck(), ServerlessServiceConditionEndpointsPopulated, t)
 	apitest.CheckConditionSucceeded(r.duck(), ServerlessServiceConditionReady, t)
 
 	// Verify that activator endpoints status is informational and does not
@@ -89,8 +91,8 @@ func TestSSTypicalFlow(t *testing.T) {
 	// affect readiness.
 	r.MarkActivatorEndpointsPopulated()
 	apitest.CheckConditionFailed(r.duck(), ServerlessServiceConditionReady, t)
-	apitest.CheckConditionSucceeded(r.duck(), ActivatorEndpointsPopulated, t)
+	apitest.CheckConditionSucceeded(r.duck(), ServerlessServiceConditionActivatorEndpointsPopulated, t)
 	r.MarkActivatorEndpointsRemoved()
 	apitest.CheckConditionFailed(r.duck(), ServerlessServiceConditionReady, t)
-	apitest.CheckConditionFailed(r.duck(), ActivatorEndpointsPopulated, t)
+	apitest.CheckConditionFailed(r.duck(), ServerlessServiceConditionActivatorEndpointsPopulated, t)
 }
