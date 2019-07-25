@@ -134,6 +134,7 @@ func (c *Reconciler) reconcile(ctx context.Context, pa *pav1alpha1.PodAutoscaler
 	if err != nil {
 		return perrors.Wrap(err, "error reconciling decider")
 	}
+	pa.Status.PropagateDeciderStatus(decider.Status)
 
 	if err := c.ReconcileMetric(ctx, pa, metricSvc); err != nil {
 		return perrors.Wrap(err, "error reconciling metric")

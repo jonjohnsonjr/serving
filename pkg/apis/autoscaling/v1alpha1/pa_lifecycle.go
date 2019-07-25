@@ -209,6 +209,11 @@ func (pas *PodAutoscalerStatus) inStatusFor(status corev1.ConditionStatus, dur t
 	return cond != nil && cond.Status == status && time.Now().After(cond.LastTransitionTime.Inner.Add(dur))
 }
 
+// PropagateDeciderStatus propagates decider's status to the pod autoscaler's status.
+func (pas *PodAutoscalerStatus) PropagateDeciderStatus(ds DeciderStatus) {
+	pas.DeciderStatus = ds
+}
+
 func (pas *PodAutoscalerStatus) duck() *duckv1beta1.Status {
 	return (*duckv1beta1.Status)(&pas.Status)
 }

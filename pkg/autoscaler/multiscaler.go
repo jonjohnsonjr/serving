@@ -36,7 +36,7 @@ import (
 type Decider struct {
 	metav1.ObjectMeta
 	Spec   DeciderSpec
-	Status DeciderStatus
+	Status av1alpha1.DeciderStatus
 }
 
 // DeciderSpec is the parameters in which the Revision should scaled.
@@ -56,20 +56,6 @@ type DeciderSpec struct {
 	StableWindow time.Duration
 	// The name of the k8s service for pod information.
 	ServiceName string
-}
-
-// DeciderStatus is the current scale recommendation.
-type DeciderStatus struct {
-	// DesiredScale is the target number of instances that autoscaler
-	// this revision needs.
-	DesiredScale int32
-
-	// ExcessBurstCapacity is the difference between spare capacity
-	// (how many more concurrent requests the pods in the revision
-	// deployment can serve) and the configured target burst capacity.
-	// If this number is negative: Activator will be threaded in
-	// the request path by the PodAutoscaler controller.
-	ExcessBurstCapacity int32
 }
 
 // UniScaler records statistics for a particular Decider and proposes the scale for the Decider's target based on those statistics.

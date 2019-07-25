@@ -45,3 +45,9 @@ spec:
   - name: Reason
     type: string
     JSONPath: ".status.conditions[?(@.type=='Ready')].reason"
+  - name: Burst
+    type: integer
+    JSONPath: ".status.ExcessBurstCapacity"
+  - name: Desired
+    type: integer
+    JSONPath: ".status.DesiredScale"

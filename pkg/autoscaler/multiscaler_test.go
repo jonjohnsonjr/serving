@@ -30,6 +30,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	. "knative.dev/pkg/logging/testing"
+	"knative.dev/serving/pkg/apis/autoscaling/v1alpha1"
 )
 
 const (
@@ -428,7 +429,7 @@ func newDecider() *Decider {
 			TickInterval:      tickInterval,
 			TargetConcurrency: 1,
 		},
-		Status: DeciderStatus{},
+		Status: v1alpha1.DeciderStatus{},
 	}
 }
 

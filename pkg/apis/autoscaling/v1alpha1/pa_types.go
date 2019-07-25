@@ -103,6 +103,20 @@ const (
 	PodAutoscalerConditionActive apis.ConditionType = "Active"
 )
 
+// DeciderStatus is the current scale recommendation.
+type DeciderStatus struct {
+	// DesiredScale is the target number of instances that autoscaler
+	// this revision needs.
+	DesiredScale int32
+
+	// ExcessBurstCapacity is the difference between spare capacity
+	// (how many more concurrent requests the pods in the revision
+	// deployment can serve) and the configured target burst capacity.
+	// If this number is negative: Activator will be threaded in
+	// the request path by the PodAutoscaler controller.
+	ExcessBurstCapacity int32
+}
+
 // PodAutoscalerStatus communicates the observed state of the PodAutoscaler (from the controller).
 type PodAutoscalerStatus struct {
 	duckv1beta1.Status
@@ -114,6 +128,8 @@ type PodAutoscalerStatus struct {
 	// MetricsServiceName is the K8s Service name that provides revision metrics.
 	// The service is managed by the PA object.
 	MetricsServiceName string `json:"metricsServiceName"`
+
+	DeciderStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
