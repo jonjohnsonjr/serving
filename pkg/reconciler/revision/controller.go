@@ -28,6 +28,7 @@ import (
 	painformer "knative.dev/serving/pkg/client/injection/informers/autoscaling/v1alpha1/podautoscaler"
 	revisioninformer "knative.dev/serving/pkg/client/injection/informers/serving/v1alpha1/revision"
 
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -81,7 +82,20 @@ func NewController(
 
 	// Set up an event handler for when the resource types of interest change
 	c.Logger.Info("Setting up event handlers")
-	revisionInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+	revisionInformer.Informer().AddEventHandler(
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: impl.Enqueue,
+			UpdateFunc: controller.FilterUpdateFunc(impl.Enqueue, func(first, second interface{}) bool {
+				if fst, ok := first.(*v1alpha1.Revision); ok {
+					if snd, ok := second.(*v1alpha1.Revision); ok {
+						// Only reconcile if the specs differ.
+						return !equality.Semantic.DeepEqual(fst.Spec, snd.Spec)
+					}
+				}
+				return true
+			}),
+			DeleteFunc: impl.Enqueue,
+		})
 
 	deploymentInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.Filter(v1alpha1.SchemeGroupVersion.WithKind("Revision")),

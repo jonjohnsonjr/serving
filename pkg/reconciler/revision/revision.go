@@ -18,8 +18,10 @@ package revision
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/google/go-containerregistry/pkg/authn/k8schain"
 	"go.uber.org/zap"
@@ -95,6 +97,9 @@ func (c *Reconciler) Reconcile(ctx context.Context, key string) error {
 	// Reconcile this copy of the revision and then write back any status
 	// updates regardless of whether the reconciliation errored out.
 	reconcileErr := c.reconcile(ctx, rev)
+	if reconcileErr != nil {
+		rev.Status.MarkResourcesUnavailable("ReconcileError", fmt.Sprintf("Failed with: %v", reconcileErr))
+	}
 	if equality.Semantic.DeepEqual(original.Status, rev.Status) {
 		// If we didn't change anything then don't call updateStatus.
 		// This is important because the copy we loaded from the informer's
@@ -205,7 +210,7 @@ func (c *Reconciler) reconcile(ctx context.Context, rev *v1alpha1.Revision) erro
 	}
 
 	rev.Status.ObservedGeneration = rev.Generation
-	return nil
+	return fmt.Errorf("hardcoded error with timestamp: %v", time.Now())
 }
 
 func (c *Reconciler) updateRevisionLoggingURL(

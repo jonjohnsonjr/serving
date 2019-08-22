@@ -70,6 +70,17 @@ func PassNew(f func(interface{})) func(interface{}, interface{}) {
 	}
 }
 
+// FilterUpdateFunc is like PassNew, but takes a predicate to allow
+// filtering out certain status updates. For example, this is useful
+// if a reconciler would like to ignore its own status updates.
+func FilterUpdateFunc(f func(interface{}), p func(interface{}, interface{}) bool) func(interface{}, interface{}) {
+	return func(first, second interface{}) {
+		if p(first, second) {
+			PassNew(f)(first, second)
+		}
+	}
+}
+
 // HandleAll wraps the provided handler function into a cache.ResourceEventHandler
 // that sends all events to the given handler.  For Updates, only the new object
 // is forwarded.
